@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Rombel - SIMPEDIK</title>
+    <title>Data Rombel - SMKN 1 Simpang Teritip</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -735,7 +735,18 @@
                 if (id) {
                     result = await supabaseClient.from('rombel').update({ nama_kelas: namaKelas, jumlah_siswa: jumlahSiswa }).eq('id', id);
                 } else {
-                    result = await supabaseClient.from('rombel').insert([{ nama_kelas: namaKelas, jumlah_siswa: jumlahSiswa }]);
+                    // Fix: Generate ID manual karena database tidak auto-increment (mengatasi error not-null constraint)
+                    const { data: maxData } = await supabaseClient
+                        .from('rombel')
+                        .select('id')
+                        .order('id', { ascending: false })
+                        .limit(1);
+
+                    let nextId = 1;
+                    if (maxData && maxData.length > 0 && maxData[0].id) {
+                        nextId = parseInt(maxData[0].id) + 1;
+                    }
+                    result = await supabaseClient.from('rombel').insert([{ id: nextId, nama_kelas: namaKelas, jumlah_siswa: jumlahSiswa }]);
                 }
                 const { error } = result;
 
@@ -819,4 +830,3 @@
     </script>
 </body>
 </html>
-
