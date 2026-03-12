@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapping Siswa - SIMPEDIK</title>
+    <title>Mapping Siswa - SMKN 1 Simpang Teritip</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -513,7 +513,9 @@
                     </div>
                     <div class="form-group">
                         <label>Kelas</label>
-                        <input type="text" id="kelasMapping" name="kelasMapping" readonly>
+                        <select id="kelasMapping" name="kelasMapping" required style="width: 100%; padding: 10px; background: #374151; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.95rem; color: #fff;">
+                            <option value="">Pilih Kelas</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Nama Siswa</label>
@@ -781,18 +783,39 @@
         const namaSiswaHidden = document.getElementById('namaSiswa');
         const siswaDropdown = document.getElementById('siswaDropdown');
         
+        let rombelCache = [];
         let siswaCache = [];
 
         window.openMappingModal = async function(kelasName) {
             mappingForm.reset();
             const kelasInput = document.getElementById('kelasMapping');
-            kelasInput.value = kelasName;
             
-            if (!kelasName) {
-                kelasInput.readOnly = false;
-                kelasInput.placeholder = "Masukkan Nama Kelas (Contoh: X TKJ 1)";
-            } else {
-                kelasInput.readOnly = true;
+            // Load Data Rombel untuk Dropdown dari Project SIMPedik
+            if (rombelCache.length === 0) {
+                try {
+                    const { data, error } = await simpedikClient
+                        .from('rombel')
+                        .select('nama_kelas')
+                        .order('nama_kelas');
+                    if (!error) rombelCache = data;
+                } catch (err) {
+                    console.error('Error loading rombel:', err);
+                }
+            }
+
+            // Populate Dropdown
+            kelasInput.innerHTML = '<option value="">Pilih Kelas</option>';
+            if (rombelCache.length > 0) {
+                rombelCache.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.nama_kelas;
+                    opt.textContent = r.nama_kelas;
+                    kelasInput.appendChild(opt);
+                });
+            }
+
+            if (kelasName) {
+                kelasInput.value = kelasName;
             }
             
             if (siswaCache.length === 0) {
@@ -1007,5 +1030,4 @@
         }
     </script>
 </body>
-
 </html>
