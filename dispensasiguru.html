@@ -286,6 +286,18 @@
                         <input type="text" id="kelasSiswa" name="kelas" readonly>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Walikelas</label>
+                    <div class="searchable-dropdown">
+                        <input type="text" id="walikelasInput" placeholder="Ketik nama walikelas..." autocomplete="off" required>
+                        <input type="hidden" id="walikelasHidden" name="walikelas">
+                        <div id="walikelasDropdown" class="dropdown-options"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>NIP Walikelas</label>
+                    <input type="text" id="nipWalikelas" name="nipWalikelas" readonly placeholder="Otomatis terisi">
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Tanggal Dispen</label>
@@ -325,6 +337,10 @@
                 <div class="form-group">
                     <label>Alasan</label>
                     <textarea id="alasanDispen" name="alasan" rows="3" required placeholder="Alasan dispensasi..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Nama Orang Tua/Wali</label>
+                    <input type="text" id="namaWali" name="namaWali" required placeholder="Masukkan nama orang tua/wali...">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
@@ -523,9 +539,14 @@
         const siswaDropdown = document.getElementById('siswaDropdown');
         const mapelSelect = document.getElementById('mapelSelect');
         const guruSelect = document.getElementById('guruSelect');
+        const walikelasInput = document.getElementById('walikelasInput');
+        const walikelasHidden = document.getElementById('walikelasHidden');
+        const walikelasDropdown = document.getElementById('walikelasDropdown');
+        const nipWalikelasInput = document.getElementById('nipWalikelas');
         const guruPiketSelect = document.getElementById('guruPiketSelect');
 
         let siswaCache = [];
+        let walikelasCache = [];
 
         // Buka Modal
         btnAdd.addEventListener('click', async () => {
@@ -543,6 +564,7 @@
 
             // Muat data kalo kosong
             if (siswaCache.length === 0) await loadSiswaData();
+            if (walikelasCache.length === 0) await loadWalikelasData();
             if (mapelSelect.options.length <= 1) await loadMapelData();
             if (guruSelect.options.length <= 1) await loadGuruData();
             
@@ -560,6 +582,19 @@
             const dateStr = now.toISOString().slice(0,10).replace(/-/g, '');
             const random = Math.floor(1000 + Math.random() * 9000);
             document.getElementById('kodeDispen').value = `DIS-${dateStr}-${random}`;
+        }
+
+        // Muat Data Walikelas dari SIMPEDIK
+        async function loadWalikelasData() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('walikelas')
+                    .select('nama_guru, nip')
+                    .order('nama_guru');
+                
+                if (error) throw error;
+                if (data) walikelasCache = data; // Simpan objek lengkap
+            } catch (err) { console.error('Error loading walikelas:', err); }
         }
 
         // Muat Data Siswa dari Mapping
@@ -637,10 +672,38 @@
             siswaDropdown.style.display = 'block';
         });
 
+        // Logika Cari Walikelas
+        walikelasInput.addEventListener('input', function() {
+            const val = this.value.toLowerCase();
+            const filtered = walikelasCache.filter(w => w.nama_guru.toLowerCase().includes(val));
+            
+            walikelasDropdown.innerHTML = '';
+            if (filtered.length === 0) {
+                walikelasDropdown.innerHTML = '<div class="dropdown-option">Tidak ditemukan</div>';
+            } else {
+                filtered.forEach(w => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-option';
+                    div.textContent = w.nama_guru;
+                    div.onclick = () => {
+                        walikelasInput.value = w.nama_guru;
+                        walikelasHidden.value = w.nama_guru;
+                        nipWalikelasInput.value = w.nip || '';
+                        walikelasDropdown.style.display = 'none';
+                    };
+                    walikelasDropdown.appendChild(div);
+                });
+            }
+            walikelasDropdown.style.display = 'block';
+        });
+
         // Tutup dropdown kalo klik di luar
         document.addEventListener('click', (e) => {
             if (!namaSiswaInput.contains(e.target) && !siswaDropdown.contains(e.target)) {
                 siswaDropdown.style.display = 'none';
+            }
+            if (!walikelasInput.contains(e.target) && !walikelasDropdown.contains(e.target)) {
+                walikelasDropdown.style.display = 'none';
             }
         });
 
@@ -667,13 +730,16 @@
             const nipGuruPiket = document.getElementById('nipGuruPiket').value;
 
             const formData = {
-                kode_dispen: document.getElementById('kodeDispen').value,
+                kode_dispen: document.getElementById('kodeDispen').value, // Tetap ada di formData
                 nama_siswa: namaSiswaHidden.value,
                 nisn: document.getElementById('nisnSiswa').value,
                 kelas: document.getElementById('kelasSiswa').value,
+                nip_walikelas: nipWalikelasInput.value, // Tambahkan NIP Walikelas
+                walikelas: walikelasHidden.value,
                 tanggal: document.getElementById('tglDispen').value,
                 pukul: document.getElementById('pukulDispen').value,
                 alasan: document.getElementById('alasanDispen').value,
+                nama_wali: document.getElementById('namaWali').value,
                 mapel: mapel,
                 guru_mapel: guru,
                 nip: nip,
@@ -681,9 +747,26 @@
                 nip_gurupiket: nipGuruPiket
             };
 
+            // Buat objek terpisah untuk data yang akan disimpan ke database
+            // Menghilangkan kolom yang tidak perlu disimpan ke DB
+            const formDataForDb = {
+                kode_dispen: formData.kode_dispen,
+                nama_siswa: formData.nama_siswa,
+                nisn: formData.nisn,
+                kelas: formData.kelas,
+                tanggal: formData.tanggal,
+                pukul: formData.pukul,
+                alasan: formData.alasan,
+                mapel: formData.mapel,
+                guru_mapel: formData.guru_mapel,
+                nip: formData.nip,
+                guru_piket: formData.guru_piket,
+                nip_gurupiket: formData.nip_gurupiket
+            };
+
             try {
                 // Simpen ke DB Absensi
-                const { error } = await absensiClient.from('dispensasi').insert([formData]);
+                const { error } = await absensiClient.from('dispensasi').insert([formDataForDb]);
                 if (error) throw error;
                 
                 alert('Data Dispensasi Berhasil Disimpan');
@@ -750,9 +833,12 @@
                 { label: "Nama Siswa", value: data.nama_siswa },
                 { label: "NISN", value: data.nisn || '-' },
                 { label: "Kelas", value: data.kelas },
+                { label: "NIP Walikelas", value: data.nip_walikelas || '-' }, // Tampilkan NIP Walikelas
+                { label: "Walikelas", value: data.walikelas || '-' },
                 { label: "Hari/Tanggal", value: new Date(data.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) },
                 { label: "Pukul", value: data.pukul + " WIB" },
                 { label: "Mata Pelajaran", value: data.mapel },
+                { label: "Orang Tua/Wali", value: data.nama_wali || '-' },
                 { label: "Guru Mapel", value: data.guru_mapel },
                 { label: "Alasan", value: data.alasan }
             ];
@@ -776,11 +862,29 @@
             doc.text("Demikian surat izin ini diberikan untuk dapat dipergunakan sebagaimana mestinya.", leftMargin, yPos);
             
             // Tanda Tangan
-            yPos += 20;
+            yPos += 15;
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            const xLeft = 60;
-            const xRight = pageWidth - 60;
+            const xLeft = 50;
+            const xRight = pageWidth - 50;
+
+            // --- BARIS 1: Orang Tua & Walikelas ---
+            // Orang Tua (Kiri)
+            doc.text("Orang Tua/Wali,", xLeft, yPos + 5, { align: 'center' });
+            doc.setFont(undefined, 'bold');
+            doc.text(data.nama_wali || "..........................", xLeft, yPos + 25, { align: 'center' });
+            doc.setFont(undefined, 'normal');
+
+            // Walikelas (Kanan)
+            doc.text(`Mentok, ${dateStr}`, xRight, yPos, { align: 'center' });
+            doc.text("Walikelas,", xRight, yPos + 5, { align: 'center' });
+            doc.setFont(undefined, 'bold');
+            doc.text(data.walikelas || "..........................", xRight, yPos + 25, { align: 'center' });
+            doc.setFont(undefined, 'normal');
+            doc.text(`NIP. ${data.nip_walikelas || ".........................."}`, xRight, yPos + 30, { align: 'center' });
+
+            // --- BARIS 2: Guru Mapel & Guru Piket ---
+            yPos += 45;
 
             // Guru Mapel (Kiri)
             doc.text("Guru Mata Pelajaran,", xLeft, yPos + 5, { align: 'center' });
@@ -790,9 +894,7 @@
             doc.text(`NIP. ${data.nip || ".........................."}`, xLeft, yPos + 30, { align: 'center' });
 
             // Guru Piket (Kanan)
-            doc.text(`Simpang Teritip, ${dateStr}`, xRight, yPos, { align: 'center' });
             doc.text("Guru Piket,", xRight, yPos + 5, { align: 'center' });
-            
             doc.setFont(undefined, 'bold');
             doc.text(data.guru_piket || "..........................", xRight, yPos + 25, { align: 'center' });
             doc.setFont(undefined, 'normal');
@@ -893,7 +995,7 @@
             doc.text("Laporan Dispensasi Siswa", pageWidth / 2, yPos, { align: 'center' });
             yPos += 8;
             
-            const schoolName = schoolData.nama_sekolah || document.querySelector('.navbar-brand span').textContent || 'SMK Negeri 1 Simpang Teritip';
+            const schoolName = schoolData.nama_sekolah || document.querySelector('.navbar-brand span').textContent || 'SMK Negeri 1 Mentok';
             doc.setFontSize(12);
             doc.setTextColor(100);
             doc.text(schoolName, pageWidth / 2, yPos, { align: 'center' });
@@ -967,7 +1069,7 @@
 
             if (count === 1) {
                 const xPos = pageWidth - 60;
-                doc.text(`Simpang Teritip, ${dateStr}`, xPos, finalY, { align: 'center' });
+                doc.text(`Mentok, ${dateStr}`, xPos, finalY, { align: 'center' });
                 doc.text("Guru Piket,", xPos, finalY + 5, { align: 'center' });
                 
                 doc.setFont(undefined, 'bold');
@@ -986,7 +1088,7 @@
 
                 // Kanan
                 const xRight = pageWidth - 50;
-                doc.text(`Simpang Teritip, ${dateStr}`, xRight, finalY, { align: 'center' });
+                doc.text(`Mentok, ${dateStr}`, xRight, finalY, { align: 'center' });
                 doc.text("Guru Piket 2,", xRight, finalY + 5, { align: 'center' });
                 doc.setFont(undefined, 'bold');
                 doc.text(piketTeachers[1].name, xRight, finalY + 25, { align: 'center' });
@@ -997,7 +1099,7 @@
                 const colWidth = pageWidth / 3;
                 
                 // Tanggal di atas guru paling kanan
-                doc.text(`Simpang Teritip, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
+                doc.text(`Mentok, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
 
                 piketTeachers.forEach((teacher, index) => {
                     const xPos = (colWidth * index) + (colWidth / 2);
@@ -1012,7 +1114,7 @@
                 const colWidth = pageWidth / 3;
                 
                 // Tanggal
-                doc.text(`Simpang Teritip, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
+                doc.text(`Mentok, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
 
                 // Baris 1 (Piket 1, 2, 3)
                 piketTeachers.slice(0, 3).forEach((teacher, index) => {
