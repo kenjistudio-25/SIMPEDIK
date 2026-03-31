@@ -385,7 +385,7 @@
             const namaGuru = session ? session.nama : null;
 
             try {
-                const { data, error } = await supabaseClient.from('gurupiket').select('piket1, piket2, piket3').eq('hari', hariIni);
+                const { data, error } = await supabaseClient.from('gurupiket').select('piket1, piket2, piket3, piket4, piket5, piket6').eq('hari', hariIni);
                 if (error) throw error;
 
                 container.innerHTML = '';
@@ -407,7 +407,10 @@
                     isPiket = data.some(p => 
                         p.piket1 === namaGuru || 
                         p.piket2 === namaGuru || 
-                        p.piket3 === namaGuru
+                        p.piket3 === namaGuru ||
+                        p.piket4 === namaGuru ||
+                        p.piket5 === namaGuru ||
+                        p.piket6 === namaGuru
                     );
                 }
 
@@ -424,7 +427,14 @@
 
                 // Ambil Foto Guru
                 const teacherNames = [];
-                data.forEach(p => { if(p.piket1) teacherNames.push(p.piket1); if(p.piket2) teacherNames.push(p.piket2); if(p.piket3) teacherNames.push(p.piket3); });
+                data.forEach(p => { 
+                    if(p.piket1) teacherNames.push(p.piket1); 
+                    if(p.piket2) teacherNames.push(p.piket2); 
+                    if(p.piket3) teacherNames.push(p.piket3); 
+                    if(p.piket4) teacherNames.push(p.piket4); 
+                    if(p.piket5) teacherNames.push(p.piket5); 
+                    if(p.piket6) teacherNames.push(p.piket6); 
+                });
                 
                 let photoMap = {};
                 let nipMap = {};
@@ -460,6 +470,9 @@
                     container.innerHTML += createCard(piket.piket1, 'Guru Piket 1', '#3b82f6');
                     container.innerHTML += createCard(piket.piket2, 'Guru Piket 2', '#10b981');
                     container.innerHTML += createCard(piket.piket3, 'Guru Piket 3', '#f59e0b');
+                    container.innerHTML += createCard(piket.piket4, 'Guru Piket 4', '#8b5cf6');
+                    container.innerHTML += createCard(piket.piket5, 'Guru Piket 5', '#ef4444');
+                    container.innerHTML += createCard(piket.piket6, 'Guru Piket 6', '#6366f1');
                 });
             } catch (err) {
                 console.error(err);
@@ -785,8 +798,7 @@
             doc.setFont(undefined, 'normal');
             doc.text(`NIP. ${data.nip_gurupiket || ".........................."}`, xRight, yPos + 30, { align: 'center' });
 
-            // Auto Print/Simpan
-            doc.autoPrint();
+            // Buka file PDF di tab baru
             window.open(doc.output('bloburl'), '_blank');
         }
 
@@ -899,7 +911,7 @@
             let finalY = doc.lastAutoTable.finalY + 20;
             
             // Cek jika halaman penuh
-            if (finalY + 40 > doc.internal.pageSize.getHeight()) {
+            if (finalY + 80 > doc.internal.pageSize.getHeight()) {
                 doc.addPage();
                 finalY = 20;
             }
@@ -914,12 +926,12 @@
             try {
                 const { data: piketData } = await supabaseClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3')
+                    .select('piket1, piket2, piket3, piket4, piket5, piket6')
                     .eq('hari', hariIni)
                     .single();
                 
                 if (piketData) {
-                    const names = [piketData.piket1, piketData.piket2, piketData.piket3].filter(n => n && n.trim() !== '');
+                    const names = [piketData.piket1, piketData.piket2, piketData.piket3, piketData.piket4, piketData.piket5, piketData.piket6].filter(n => n && n.trim() !== '');
                     
                     if (names.length > 0) {
                         // Ambil NIP Guru
@@ -980,13 +992,29 @@
                 doc.text(piketTeachers[1].name, xRight, finalY + 25, { align: 'center' });
                 doc.setFont(undefined, 'normal');
                 doc.text(`NIP. ${piketTeachers[1].nip}`, xRight, finalY + 30, { align: 'center' });
-            } else {
-                // 3 Guru atau lebih (tampilkan 3 kolom)
+            } else if (count === 3) {
+                // 3 Guru (tampilkan 3 kolom dalam 1 baris)
                 const colWidth = pageWidth / 3;
                 
                 // Tanggal di atas guru paling kanan
                 doc.text(`Simpang Teritip, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
 
+                piketTeachers.forEach((teacher, index) => {
+                    const xPos = (colWidth * index) + (colWidth / 2);
+                    doc.text(`Guru Piket ${index + 1},`, xPos, finalY + 5, { align: 'center' });
+                    doc.setFont(undefined, 'bold');
+                    doc.text(teacher.name, xPos, finalY + 25, { align: 'center' });
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`NIP. ${teacher.nip}`, xPos, finalY + 30, { align: 'center' });
+                });
+            } else {
+                // Lebih dari 3 guru (2 baris x 3 kolom)
+                const colWidth = pageWidth / 3;
+                
+                // Tanggal
+                doc.text(`Simpang Teritip, ${dateStr}`, (colWidth * 2.5), finalY, { align: 'center' });
+
+                // Baris 1 (Piket 1, 2, 3)
                 piketTeachers.slice(0, 3).forEach((teacher, index) => {
                     const xPos = (colWidth * index) + (colWidth / 2);
                     doc.text(`Guru Piket ${index + 1},`, xPos, finalY + 5, { align: 'center' });
@@ -994,6 +1022,17 @@
                     doc.text(teacher.name, xPos, finalY + 25, { align: 'center' });
                     doc.setFont(undefined, 'normal');
                     doc.text(`NIP. ${teacher.nip}`, xPos, finalY + 30, { align: 'center' });
+                });
+
+                // Baris 2 (Piket 4, 5, 6)
+                const secondRowY = finalY + 45;
+                piketTeachers.slice(3, 6).forEach((teacher, index) => {
+                    const xPos = (colWidth * index) + (colWidth / 2);
+                    doc.text(`Guru Piket ${index + 4},`, xPos, secondRowY, { align: 'center' });
+                    doc.setFont(undefined, 'bold');
+                    doc.text(teacher.name, xPos, secondRowY + 25, { align: 'center' });
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`NIP. ${teacher.nip}`, xPos, secondRowY + 30, { align: 'center' });
                 });
             }
 
