@@ -402,6 +402,13 @@
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">No. Telepon</label>
                     <input type="text" id="editTlp" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="editPassword" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; padding-right: 40px;">
+                        <i class="fas fa-eye" id="toggleEditPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
+                    </div>
+                </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Foto Profil</label>
                     <input type="file" id="editPhoto" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
@@ -496,11 +503,14 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('dataguru')
-                    .select('id_guru, nama_guru, nip::text, mapel, tlp, photo')
+                    .select('*') // Mengambil semua kolom agar lebih aman
                     .eq('nama_guru', session.nama)
-                    .single();
+                    .maybeSingle(); // Menggunakan maybeSingle agar tidak throw error jika data tidak ditemukan
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Gagal mengambil data guru:', error);
+                    return;
+                }
 
                 if (data) {
                     currentGuruData = data; // Simpen ke global
@@ -537,6 +547,7 @@
                     document.getElementById('editNip').value = currentGuruData.nip || '';
                     document.getElementById('editMapel').value = currentGuruData.mapel || '';
                     document.getElementById('editTlp').value = currentGuruData.tlp || '';
+                    document.getElementById('editPassword').value = currentGuruData.password || '';
                     document.getElementById('editPhoto').value = ''; // Reset file input
                     document.getElementById('editPhotoPreview').src = '';
                     document.getElementById('editPhotoPreviewContainer').style.display = 'none';
@@ -551,6 +562,19 @@
 
         if(closeUpdate) closeUpdate.addEventListener('click', closeUpdateModalFunc);
         if(cancelUpdate) cancelUpdate.addEventListener('click', closeUpdateModalFunc);
+
+        // Logika Toggle Password Update Profil
+        const toggleEditPassword = document.getElementById('toggleEditPassword');
+        const editPasswordInput = document.getElementById('editPassword');
+
+        if (toggleEditPassword && editPasswordInput) {
+            toggleEditPassword.addEventListener('click', function() {
+                const type = editPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                editPasswordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
 
         // Logika Pratinjau Gambar
         const editPhotoInput = document.getElementById('editPhoto');
@@ -589,6 +613,7 @@
                     const nama = document.getElementById('editNama').value;
                     const mapel = document.getElementById('editMapel').value;
                     const tlp = document.getElementById('editTlp').value;
+                    const password = document.getElementById('editPassword').value;
                     const photoInput = document.getElementById('editPhoto');
                     
                     let photoUrl = currentGuruData.photo;
@@ -619,7 +644,8 @@
                             nama_guru: nama,
                             mapel: mapel,
                             tlp: tlp,
-                            photo: photoUrl
+                            photo: photoUrl,
+                            password: password
                         })
                         .eq('id_guru', currentGuruData.id_guru);
 
@@ -687,4 +713,3 @@
     </script>
 </body>
 </html>
-
