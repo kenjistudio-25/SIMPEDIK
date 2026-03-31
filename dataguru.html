@@ -391,6 +391,10 @@
                     <input type="text" id="nip" name="nip" placeholder="Nomor Induk Pegawai">
                 </div>
                 <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="text" id="password" name="password" placeholder="Password (Otomatis sama dengan NIP)">
+                </div>
+                <div class="form-group">
                     <label for="mapel">Mata Pelajaran</label>
                     <input type="text" id="mapel" name="mapel" placeholder="Contoh: Matematika">
                 </div>
@@ -519,6 +523,7 @@
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const nipInput = document.getElementById('nip');
         const idGuruInput = document.getElementById('idGuru');
+        const passwordInput = document.getElementById('password');
         const imagePreviewContainer = document.getElementById('imagePreviewContainer');
         const imagePreview = document.getElementById('imagePreview');
         const isEditModeInput = document.getElementById('isEditMode');
@@ -609,6 +614,11 @@
         // Generate pas NIP kelar diketik
         nipInput.addEventListener('blur', generateIdGuru);
 
+        // Otomatis isi password dengan NIP saat mengetik
+        nipInput.addEventListener('input', function() {
+            passwordInput.value = this.value;
+        });
+
         // Simpen data guru global biar gampang diedit
         let allGuruData = [];
 
@@ -620,7 +630,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('dataguru')
-                    .select('id_guru, nama_guru, nip::text, mapel, tlp, photo')
+                    .select('id_guru, nama_guru, nip::text, mapel, tlp, photo, password')
                     .order('nama_guru', { ascending: true });
 
                 if (error) throw error;
@@ -668,6 +678,7 @@
                 idGuruInput.readOnly = true; // ID gak boleh diubah pas edit
                 document.getElementById('namaGuru').value = guru.nama_guru;
                 document.getElementById('nip').value = guru.nip;
+                passwordInput.value = guru.password || '';
                 document.getElementById('mapel').value = guru.mapel;
                 document.getElementById('telepon').value = guru.tlp;
 
@@ -774,7 +785,8 @@
                     nip: nipVal,
                     mapel: document.getElementById('mapel').value,
                     tlp: tlpVal,
-                    photo: photoUrl
+                    photo: photoUrl,
+                    password: passwordInput.value
                 };
 
                 let result;
@@ -883,4 +895,3 @@
     </script>
 </body>
 </html>
-
