@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page-SIMPEDIK</title>
+    <title>Login Page</title>
+    <!-- Supabase JS SDK -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
+        /* --- CSS: Styling Halaman --- */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -79,6 +81,7 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        /* --- Tabs Role --- */
         .role-tabs {
             display: flex;
             background-color: #f0f2f5;
@@ -106,10 +109,11 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* Tombol Toggle Password */
         .toggle-password {
             position: absolute;
             right: 10px;
-            top: 38px;
+            top: 38px; /* Menyesuaikan posisi vertikal */
             cursor: pointer;
             color: #666;
             font-size: 0.8rem;
@@ -161,6 +165,7 @@
             text-decoration: underline;
         }
 
+        /* Pesan Error/Sukses */
         .message {
             text-align: center;
             margin-bottom: 1rem;
@@ -172,6 +177,7 @@
         .error { background-color: #ffebee; color: #c62828; display: block; }
         .success { background-color: #e8f5e9; color: #2e7d32; display: block; }
 
+        /* --- Layout Kiri (Identitas Sekolah) --- */
         .login-left {
             flex: 1;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -204,6 +210,7 @@
             font-style: italic;
         }
 
+        /* --- Layout Kanan (Form) --- */
         .login-right {
             flex: 1;
             padding: 3rem;
@@ -212,6 +219,7 @@
             justify-content: center;
         }
 
+        /* Responsif untuk Mobile */
         @media (max-width: 768px) {
             .login-container {
                 flex-direction: column;
@@ -226,6 +234,7 @@
             .login-right { padding: 2rem; }
         }
 
+        /* --- Modal Styles (Registration) --- */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background-color: white; width: 95%; max-width: 850px; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.3s ease; max-height: 90vh; overflow-y: auto; }
@@ -256,6 +265,7 @@
             .reg-form-grid { grid-template-columns: 1fr; }
         }
 
+        /* Custom Searchable Dropdown */
         .dropdown-options {
             position: absolute;
             top: 100%;
@@ -295,12 +305,14 @@
 <body>
 
     <div class="login-container">
+        <!-- Bagian Kiri: Identitas Sekolah -->
         <div class="login-left">
             <img src="" alt="Logo Sekolah" class="school-logo" style="display: none;">
             <h1></h1>
             <p></p>
         </div>
 
+        <!-- Bagian Kanan: Form Login -->
         <div class="login-right">
             <div class="login-header">
                 <h2>Selamat Datang</h2>
@@ -341,6 +353,7 @@
         </div>
     </div>
 
+    <!-- Modal Selamat Datang -->
     <div id="welcomeModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px 20px;">
             <div style="margin-bottom: 20px;">
@@ -352,6 +365,7 @@
         </div>
     </div>
 
+    <!-- Modal Pendaftaran Sekolah -->
     <div id="registerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -363,7 +377,7 @@
                 <div class="reg-form-grid">
                     <div class="reg-form-group">
                         <label for="reg_npsn" class="required">NPSN</label>
-                        <input type="text" id="reg_npsn" required placeholder="8 Digit Angka">
+                        <input type="number" id="reg_npsn" required placeholder="8 Digit Angka">
                     </div>
                     <div class="reg-form-group">
                         <label for="reg_nama_sekolah" class="required">Nama Sekolah</label>
@@ -391,7 +405,7 @@
                     </div>
                     <div class="reg-form-group">
                         <label for="reg_nip_kepsek" class="required">NIP Kepala Sekolah</label>
-                        <input type="text" id="reg_nip_kepsek" required placeholder="Nomor Induk Pegawai">
+                        <input type="number" id="reg_nip_kepsek" required>
                     </div>
                     <div class="reg-form-group full-width">
                         <label for="reg_jabatan" class="required">Jabatan</label>
@@ -407,7 +421,7 @@
                     </div>
                     <div class="reg-form-group">
                         <label for="reg_tlp" class="required">Nomor Telepon</label>
-                        <input type="text" id="reg_tlp" required placeholder="08xxxxxxxxxx">
+                        <input type="number" id="reg_tlp" required>
                     </div>
                     <div class="reg-form-group">
                         <label for="reg_email" class="required">Email</label>
@@ -447,6 +461,9 @@
     </div>
 
     <script>
+        /* --- JavaScript: Logika Halaman --- */
+        
+        // --- Supabase Integration ---
         const supabaseUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -479,9 +496,10 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const loginForm = document.getElementById('loginForm');
-            const roleInput = document.getElementById('role');
+            const roleInput = document.getElementById('role'); // Input hidden
             const roleTabs = document.querySelectorAll('.role-tab');
             
+            // Elemen Form
             const label1 = document.getElementById('label1');
             const field1 = document.getElementById('field1');
             const field1Dropdown = document.getElementById('field1-dropdown');
@@ -494,20 +512,21 @@
 
             let currentOptions = [];
 
+            // Konfigurasi Field berdasarkan Role
             const roleConfig = {
                 'Siswa': {
                     label1: 'Nama Lengkap', 
                     isSelect1: true,
-                    options1: [],
+                    options1: [], // Akan diisi dari database
                     label2: 'NISN', placeholder2: 'Masukkan NISN', type2: 'number',
                     isPassword: false
                 },
                 'Guru': {
                     label1: 'Nama Lengkap', 
                     isSelect1: true,
-                    options1: [],
-                    label2: 'NIP', placeholder2: 'Masukkan NIP', type2: 'number',
-                    isPassword: false
+                    options1: [], // Akan diisi dari database
+                    label2: 'Password', placeholder2: 'Masukkan Password', type2: 'password',
+                    isPassword: true
                 },
                 'Administrator': {
                     label1: 'Username', placeholder1: 'Masukkan Username', type1: 'text',
@@ -517,6 +536,7 @@
                 }
             };
 
+            // --- Fetch Data Guru untuk Dropdown ---
             async function loadGuruData() {
                 try {
                     const { data, error } = await supabaseClient
@@ -529,6 +549,7 @@
                     if (data && data.length > 0) {
                         roleConfig['Guru'].options1 = data.map(guru => guru.nama_guru);
                         
+                        // Jika sedang di tab Guru, refresh dropdown
                         if (roleInput.value === 'Guru') {
                             updateFormUI(roleConfig['Guru']);
                         }
@@ -539,6 +560,7 @@
             }
             loadGuruData();
 
+            // --- Fetch Data Siswa untuk Dropdown ---
             async function loadSiswaData() {
                 try {
                     const { data, error } = await supabaseClient
@@ -551,6 +573,7 @@
                     if (data && data.length > 0) {
                         roleConfig['Siswa'].options1 = data.map(siswa => siswa.nama_siswa);
                         
+                        // Jika sedang di tab Siswa, refresh dropdown
                         if (roleInput.value === 'Siswa') {
                             updateFormUI(roleConfig['Siswa']);
                         }
@@ -561,45 +584,57 @@
             }
             loadSiswaData();
 
+            // 0. Handle Role Tabs
             roleTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const selectedRole = tab.getAttribute('data-role');
                     const config = roleConfig[selectedRole];
 
+                    // Update UI Form
                     if (config) {
                         updateFormUI(config);
                     }
 
+                    // Hapus class active dari semua tab
                     roleTabs.forEach(t => t.classList.remove('active'));
+                    // Tambah class active ke tab yang diklik
                     tab.classList.add('active');
+                    // Update nilai input hidden
                     roleInput.value = tab.getAttribute('data-role');
                 });
             });
 
             function updateFormUI(config) {
+                // Update Field 1
                 label1.textContent = config.label1;
-                field1.value = '';
+                field1.value = ''; // Reset nilai
                 
                 if (config.isSelect1) {
+                    // Mode Searchable Dropdown
                     field1.placeholder = "Ketik nama untuk mencari...";
                     field1.type = "text";
                     currentOptions = config.options1 || [];
                 } else {
+                    // Mode Input Text
                     field1.placeholder = config.placeholder1;
                     field1.type = config.type1;
                     currentOptions = [];
                 }
 
+                // Update Field 2
                 label2.textContent = config.label2;
                 field2.placeholder = config.placeholder2;
                 field2.type = config.type2;
-                field2.value = '';
+                field2.value = ''; // Reset nilai
 
+                // Toggle Password Button visibility
                 togglePasswordBtn.style.display = config.isPassword ? 'block' : 'none';
             }
 
+            // Inisialisasi UI awal
             updateFormUI(roleConfig[roleInput.value]);
 
+            // --- Logic Searchable Dropdown ---
             field1.addEventListener('input', function() {
                 if (currentOptions.length > 0) {
                     const val = this.value.toLowerCase();
@@ -635,21 +670,25 @@
                 field1Dropdown.classList.add('show');
             }
 
+            // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 if (!field1.contains(e.target) && !field1Dropdown.contains(e.target)) {
                     field1Dropdown.classList.remove('show');
                 }
             });
 
+            // 1. Fitur Toggle Lihat/Sembunyikan Password
             togglePasswordBtn.addEventListener('click', () => {
                 const type = field2.getAttribute('type') === 'password' ? 'text' : 'password';
                 field2.setAttribute('type', type);
                 togglePasswordBtn.textContent = type === 'password' ? 'Lihat' : 'Sembunyi';
             });
 
+            // 2. Handle Submit Form
             loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Mencegah reload halaman
 
+                // Reset pesan
                 messageBox.className = 'message';
                 messageBox.style.display = 'none';
                 
@@ -681,21 +720,24 @@
                     }
                 } else if (role === 'Guru') {
                     try {
+                        // Query Supabase untuk cek Nama dan Password
                         const { data, error } = await supabaseClient
                             .from('dataguru')
                             .select('*')
                             .eq('nama_guru', val1)
-                            .eq('nip', val2.trim())
+                            .eq('password', val2.trim())
                             .single();
 
-                        if (error || !data) throw new Error('Nama atau NIP tidak sesuai dengan data guru.');
+                        if (error || !data) throw new Error('Nama atau Password tidak sesuai dengan data guru.');
 
+                        // Simpan sesi guru ke sessionStorage
                         sessionStorage.setItem('guru_session', JSON.stringify({
                             nama: data.nama_guru,
                             nip: data.nip,
                             photo: data.photo
                         }));
 
+                        // Tampilkan Modal Selamat Datang
                         const welcomeModal = document.getElementById('welcomeModal');
                         const welcomeMessage = document.getElementById('welcomeMessage');
                         const btnWelcomeOk = document.getElementById('btnWelcomeOk');
@@ -703,6 +745,7 @@
                         welcomeMessage.textContent = `Selamat datang ${data.nama_guru} di aplikasi SIMPedik`;
                         welcomeModal.classList.add('active');
 
+                        // Redirect saat klik OK
                         btnWelcomeOk.onclick = () => window.location.href = 'adminguru.html';
 
                     } catch (err) {
@@ -712,6 +755,7 @@
                     }
                 } else if (role === 'Siswa') {
                     try {
+                        // Query Supabase untuk cek Nama dan NISN
                         const { data, error } = await supabaseClient
                             .from('datasiswa')
                             .select('*')
@@ -721,6 +765,7 @@
 
                         if (error || !data) throw new Error('Nama atau NISN tidak sesuai.');
 
+                        // Simpan sesi siswa ke sessionStorage
                         sessionStorage.setItem('siswa_session', JSON.stringify(data));
 
                         showMessage('Login Berhasil! Mengalihkan...', 'success');
@@ -733,23 +778,27 @@
                 }
             });
 
+            // Fungsi Helper untuk menampilkan pesan
             function showMessage(text, type) {
                 messageBox.textContent = text;
                 messageBox.className = `message ${type}`;
                 messageBox.style.display = 'block';
             }
 
+            // --- Logic Modal Pendaftaran ---
             const regModal = document.getElementById('registerModal');
             const closeRegModal = document.querySelector('.close-modal');
             const cancelRegBtn = document.querySelector('.cancel-reg-btn');
             const regForm = document.getElementById('registerForm');
             const regLogoInput = document.getElementById('reg_logo');
 
+            // Buka Modal
             registerLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 regModal.classList.add('active');
             });
 
+            // Tutup Modal
             function closeRegisterModal() {
                 regModal.classList.remove('active');
                 regForm.reset();
@@ -762,6 +811,7 @@
                 if (e.target === regModal) closeRegisterModal();
             });
 
+            // Handle File Info
             regLogoInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) {
                     const file = this.files[0];
@@ -774,6 +824,7 @@
                 }
             });
 
+            // Handle Register Submit
             regForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
@@ -783,12 +834,15 @@
                 btnDaftar.disabled = true;
 
                 try {
+                    // Validasi NPSN
                     const npsn = document.getElementById('reg_npsn').value;
                     if (npsn.length !== 8) throw new Error('NPSN harus 8 digit angka.');
 
+                    // Validasi Password
                     const password = document.getElementById('reg_password').value;
                     if (password.length < 8) throw new Error('Password minimal 8 karakter.');
 
+                    // 1. Upload Logo
                     const file = regLogoInput.files[0];
                     if (!file) throw new Error('Harap upload logo sekolah.');
 
@@ -808,15 +862,16 @@
                     
                     const logoUrl = urlData.publicUrl;
 
+                    // 2. Simpan Data ke Database
                     const formData = {
-                        npsn: npsn,
+                        npsn: parseInt(npsn),
                         nama_sekolah: document.getElementById('reg_nama_sekolah').value,
                         status: document.getElementById('reg_status').value,
                         nama_kepsek: document.getElementById('reg_nama_kepsek').value,
-                        nip_kepsek: document.getElementById('reg_nip_kepsek').value,
+                        nip_kepsek: parseInt(document.getElementById('reg_nip_kepsek').value),
                         jabatan: document.getElementById('reg_jabatan').value,
                         alamat: document.getElementById('reg_alamat').value,
-                        tlp: document.getElementById('reg_tlp').value,
+                        tlp: parseInt(document.getElementById('reg_tlp').value),
                         email: document.getElementById('reg_email').value,
                         slogan: document.getElementById('reg_slogan').value,
                         tahun_pelajaran: document.getElementById('reg_tahun_pelajaran').value,
@@ -827,13 +882,13 @@
 
                     const { error: insertError } = await supabaseClient
                         .from('identitassekolah')
-                        .upsert([formData]);
+                        .upsert([formData]); // Menggunakan upsert sesuai logika identitassekolah.html
 
                     if (insertError) throw new Error('Gagal menyimpan data: ' + insertError.message);
 
                     alert('Pendaftaran Sekolah Berhasil! Silakan login.');
                     closeRegisterModal();
-                    loadSchoolIdentity();
+                    loadSchoolIdentity(); // Refresh data sekolah di halaman login
                     
                 } catch (err) {
                     console.error(err);
@@ -846,5 +901,4 @@
         });
     </script>
 </body>
-
 </html>
