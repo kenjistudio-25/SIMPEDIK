@@ -559,7 +559,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3')
+                    .select('piket1, piket2, piket3, piket4, piket5, piket6')
                     .eq('hari', hariIni);
 
                 if (error) throw error;
@@ -572,7 +572,10 @@
                     isScheduled = data.some(piket => 
                         piket.piket1 === namaGuru || 
                         piket.piket2 === namaGuru || 
-                        piket.piket3 === namaGuru
+                        piket.piket3 === namaGuru ||
+                        piket.piket4 === namaGuru ||
+                        piket.piket5 === namaGuru ||
+                        piket.piket6 === namaGuru
                     );
                 }
 
@@ -603,6 +606,12 @@
                     if (p.piket1) teacherNames.push(p.piket1);
                     if (p.piket2) teacherNames.push(p.piket2);
                     if (p.piket3) teacherNames.push(p.piket3);
+                    if (p.piket4) teacherNames.push(p.piket4);
+                    if (p.piket5) teacherNames.push(p.piket5);
+                    if (p.piket6) teacherNames.push(p.piket6);
+                    if (p.piket4) teacherNames.push(p.piket4);
+                    if (p.piket5) teacherNames.push(p.piket5);
+                    if (p.piket6) teacherNames.push(p.piket6);
                 });
 
                 let photoMap = {};
@@ -625,6 +634,12 @@
                     if (piket.piket1) currentPiketTeachers.push({ name: piket.piket1, nip: nipMap[piket.piket1] });
                     if (piket.piket2) currentPiketTeachers.push({ name: piket.piket2, nip: nipMap[piket.piket2] });
                     if (piket.piket3) currentPiketTeachers.push({ name: piket.piket3, nip: nipMap[piket.piket3] });
+                    if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
+                    if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
+                    if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
+                    if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
+                    if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
+                    if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
 
                     const createGuruCard = (nama, label, iconClass, colorClass) => {
                         if (!nama) return '';
@@ -649,6 +664,12 @@
                     container.innerHTML += createGuruCard(piket.piket1, 'Guru Piket 1', 'fas fa-user-tie', '#3b82f6');
                     container.innerHTML += createGuruCard(piket.piket2, 'Guru Piket 2', 'fas fa-user', '#10b981');
                     container.innerHTML += createGuruCard(piket.piket3, 'Guru Piket 3', 'fas fa-user', '#f59e0b');
+                    container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
+                    container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
+                    container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
+                    container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
+                    container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
+                    container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
                 });
 
             } catch (err) {
@@ -1694,7 +1715,7 @@
 
                     finalY = doc.lastAutoTable.finalY + 20;
                     
-                    if (finalY + 40 > doc.internal.pageSize.getHeight()) {
+                    if (finalY + 80 > doc.internal.pageSize.getHeight()) {
                         doc.addPage();
                         finalY = 20;
                     }
@@ -1704,20 +1725,38 @@
                     doc.setFontSize(10);
                     doc.setTextColor(0);
 
+                    // Baris Pertama Tanda Tangan (Guru 1, 2, 3)
                     const g1 = currentPiketTeachers[0];
-                    doc.text("Guru Piket 1", colWidth * 0.5, finalY, { align: 'center' });
-                    doc.text(g1 ? g1.name : "( .............................. )", colWidth * 0.5, finalY + 25, { align: 'center' });
-                    if (g1 && g1.nip) doc.text(`NIP. ${g1.nip}`, colWidth * 0.5, finalY + 30, { align: 'center' });
+                    doc.text("Guru Piket 1", colWidth * 0.5, finalY, { align: "center" });
+                    doc.text(g1 ? g1.name : "( .............................. )", colWidth * 0.5, finalY + 25, { align: "center" });
+                    if (g1 && g1.nip) doc.text(`NIP. ${g1.nip}`, colWidth * 0.5, finalY + 30, { align: "center" });
 
                     const g2 = currentPiketTeachers[1];
-                    doc.text("Guru Piket 2", colWidth * 1.5, finalY, { align: 'center' });
-                    doc.text(g2 ? g2.name : "( .............................. )", colWidth * 1.5, finalY + 25, { align: 'center' });
-                    if (g2 && g2.nip) doc.text(`NIP. ${g2.nip}`, colWidth * 1.5, finalY + 30, { align: 'center' });
+                    doc.text("Guru Piket 2", colWidth * 1.5, finalY, { align: "center" });
+                    doc.text(g2 ? g2.name : "( .............................. )", colWidth * 1.5, finalY + 25, { align: "center" });
+                    if (g2 && g2.nip) doc.text(`NIP. ${g2.nip}`, colWidth * 1.5, finalY + 30, { align: "center" });
 
                     const g3 = currentPiketTeachers[2];
-                    doc.text("Guru Piket 3", colWidth * 2.5, finalY, { align: 'center' });
-                    doc.text(g3 ? g3.name : "( .............................. )", colWidth * 2.5, finalY + 25, { align: 'center' });
-                    if (g3 && g3.nip) doc.text(`NIP. ${g3.nip}`, colWidth * 2.5, finalY + 30, { align: 'center' });
+                    doc.text("Guru Piket 3", colWidth * 2.5, finalY, { align: "center" });
+                    doc.text(g3 ? g3.name : "( .............................. )", colWidth * 2.5, finalY + 25, { align: "center" });
+                    if (g3 && g3.nip) doc.text(`NIP. ${g3.nip}`, colWidth * 2.5, finalY + 30, { align: "center" });
+
+                    // Baris Kedua Tanda Tangan (Guru 4, 5, 6)
+                    const secondRowY = finalY + 45;
+                    const g4 = currentPiketTeachers[3];
+                    doc.text("Guru Piket 4", colWidth * 0.5, secondRowY, { align: "center" });
+                    doc.text(g4 ? g4.name : "( .............................. )", colWidth * 0.5, secondRowY + 25, { align: "center" });
+                    if (g4 && g4.nip) doc.text(`NIP. ${g4.nip}`, colWidth * 0.5, secondRowY + 30, { align: "center" });
+
+                    const g5 = currentPiketTeachers[4];
+                    doc.text("Guru Piket 5", colWidth * 1.5, secondRowY, { align: "center" });
+                    doc.text(g5 ? g5.name : "( .............................. )", colWidth * 1.5, secondRowY + 25, { align: "center" });
+                    if (g5 && g5.nip) doc.text(`NIP. ${g5.nip}`, colWidth * 1.5, secondRowY + 30, { align: "center" });
+
+                    const g6 = currentPiketTeachers[5];
+                    doc.text("Guru Piket 6", colWidth * 2.5, secondRowY, { align: "center" });
+                    doc.text(g6 ? g6.name : "( .............................. )", colWidth * 2.5, secondRowY + 25, { align: "center" });
+                    if (g6 && g6.nip) doc.text(`NIP. ${g6.nip}`, colWidth * 2.5, secondRowY + 30, { align: "center" });
 
                     doc.save(`Laporan_Lengkap_Piket_Siswa_${monthName}.pdf`);
                 } catch (err) {
@@ -1729,4 +1768,3 @@
     </script>
 </body>
 </html>
-
