@@ -332,6 +332,42 @@
             .navbar-brand span {
                 font-size: 1rem; /* Kecilin Dikit di HP */
             }
+            .main-content { padding: 1rem; }
+            .table-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+            .action-group { flex-direction: column; width: 100%; gap: 10px; }
+            .action-group button, .action-group input { 
+                width: 100% !important; 
+                justify-content: center;
+                margin: 0;
+            }
+        }
+
+        /* Optimasi Tata Letak Aksi (Symmetry) */
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .action-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-action-custom {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.2s;
         }
 
         @media (min-width: 769px) {
@@ -572,13 +608,13 @@
         
         <!-- Wadah Cari & Tombol -->
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
-                    <input type="text" placeholder="Cari Arsip" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <div class="table-actions">
+                <div class="action-group">
+                    <input type="text" id="searchArsip" placeholder="Cari Arsip..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
                 </div>
-                <div>
-                    <button id="addArsipBtn" style="background-color: #4CAF50; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">Tambah Arsip</button>
-                    <button id="exportPdfBtn" style="background-color: #008CBA; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">Export PDF</button>
+                <div class="action-group">
+                    <button id="addArsipBtn" class="btn-action-custom" style="background-color: #4CAF50;"><i class="fas fa-plus"></i> Tambah Arsip</button>
+                    <button id="exportPdfBtn" class="btn-action-custom" style="background-color: #008CBA;"><i class="fas fa-file-pdf"></i> Export PDF</button>
                 </div>
             </div>
 
@@ -876,4 +912,3 @@
     </script>
 </body>
 </html>
-
