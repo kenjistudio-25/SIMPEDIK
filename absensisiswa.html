@@ -578,8 +578,8 @@
                     const createGuruCard = (nama, label, iconClass, colorClass) => {
                         if (!nama) return '';
                         const photoUrl = photoMap[nama];
-                        const avatarContent = photoUrl 
-                            ? `<img src="${photoUrl}" alt="${nama}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                        const avatarContent = photoUrl
+                            ? `<img src="${photoUrl}" alt="${nama}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
                             : `<i class="${iconClass}"></i>`;
 
                         return `
