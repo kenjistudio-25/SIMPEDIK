@@ -260,7 +260,33 @@
 
         @media (max-width: 768px) {
             .navbar-brand span {
-                font-size: 1rem;
+                font-size: 0.9rem;
+            }
+            .main-content {
+                padding: 1rem;
+            }
+            .btn-back-dashboard {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+            /* Symmetrize Live Time */
+            .main-content > div[style*="display: flex"]:first-child {
+                justify-content: center !important;
+                margin-bottom: 15px !important;
+            }
+            /* Neaten Card Headers & Actions */
+            .dashboard-card > div[style*="display: flex"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 15px !important;
+            }
+            .dashboard-card div[style*="display: flex"] > div {
+                flex-direction: column !important;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+            #searchRiwayatInput, #exportRiwayatPdfBtn {
+                width: 100% !important;
             }
         }
 
@@ -1277,4 +1303,3 @@
     </script>
 </body>
 </html>
-
