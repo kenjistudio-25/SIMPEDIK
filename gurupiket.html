@@ -674,13 +674,28 @@
 
         /* Tampilan HP */
         @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
             .table-controls {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 10px;
             }
             
             .search-box {
                 min-width: 100%;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .filter-group .filter-select, 
+            .filter-group .btn {
+                width: 100%;
+                justify-content: center;
             }
             
             .custom-table th, .custom-table td {
@@ -699,10 +714,6 @@
             .custom-table {
                 display: table;
                 min-width: 1200px; /* Memastikan kolom punya ruang saat scroll horizontal */
-            }
-            
-            .main-content {
-                padding: 1rem;
             }
         }
 
