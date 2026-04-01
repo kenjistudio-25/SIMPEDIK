@@ -185,8 +185,40 @@
         }
 
         @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
             .navbar-brand span {
                 font-size: 1rem;
+            }
+            /* Optimasi Tabel Biodata/Dropdown */
+            #biodataContainer table tr {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 10px;
+            }
+            #biodataContainer table td {
+                width: 100% !important;
+                padding: 4px 0 !important;
+            }
+            #biodataContainer table td:first-child {
+                border-bottom: 1px dashed #eee;
+            }
+            .custom-select, .custom-input {
+                width: 100%;
+            }
+            /* Toolbar Input Nilai */
+            .input-nilai-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .actions-wrapper {
+                flex-direction: column;
+                width: 100%;
+            }
+            .export-dropdown, .export-dropdown .btn, .actions-wrapper .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
 
@@ -595,10 +627,10 @@
                         </tr>
                         <tr>
                             <td style="padding: 12px 0; color: #666; font-weight: 600;">KKTP/KKM</td>
-                            <td style="padding: 8px 0; color: #333; display: flex; align-items: center;">
-                                <span style="margin-right: 5px;">:</span>
+                            <td style="padding: 8px 0; color: #333; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <span style="margin-right: 5px;" class="mobile-hide">:</span>
                                 <input type="number" id="inputKKTP" class="custom-input" placeholder="0" style="width: 80px;">
-                                <span style="margin-left: 15px; margin-right: 5px; font-weight: 600; color: #666;">Jumlah Ulangan Harian :</span>
+                                <span style="margin-right: 5px; font-weight: 600; color: #666;">Jml UH:</span>
                                 <input type="number" id="inputJmlUH" class="custom-input" placeholder="0" min="0" max="7" style="width: 80px;">
                             </td>
                         </tr>
