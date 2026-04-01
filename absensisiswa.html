@@ -288,6 +288,15 @@
             #searchRiwayatInput, #exportRiwayatPdfBtn {
                 width: 100% !important;
             }
+            /* Symmetrize Piket Header */
+            .dashboard-card > div[style*="justify-content: space-between"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+                text-align: center;
+            }
+            #piketList {
+                grid-template-columns: 1fr !important;
+            }
         }
 
         /* Tombol Balik Dashboard */
@@ -494,7 +503,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3')
+                    .select('piket1, piket2, piket3, piket4, piket5, piket6')
                     .eq('hari', hariIni);
 
                 if (error) throw error;
@@ -508,7 +517,10 @@
                     isScheduled = data.some(piket => 
                         piket.piket1 === namaGuru || 
                         piket.piket2 === namaGuru || 
-                        piket.piket3 === namaGuru
+                        piket.piket3 === namaGuru ||
+                        piket.piket4 === namaGuru ||
+                        piket.piket5 === namaGuru ||
+                        piket.piket6 === namaGuru
                     );
                 }
 
@@ -533,6 +545,9 @@
                     if (p.piket1) teacherNames.push(p.piket1);
                     if (p.piket2) teacherNames.push(p.piket2);
                     if (p.piket3) teacherNames.push(p.piket3);
+                    if (piket.piket4) teacherNames.push(piket.piket4);
+                    if (piket.piket5) teacherNames.push(piket.piket5);
+                    if (piket.piket6) teacherNames.push(piket.piket6);
                 });
 
                 let photoMap = {};
@@ -555,6 +570,9 @@
                     if (piket.piket1) currentPiketTeachersList.push(piket.piket1);
                     if (piket.piket2) currentPiketTeachersList.push(piket.piket2);
                     if (piket.piket3) currentPiketTeachersList.push(piket.piket3);
+                    if (piket.piket4) currentPiketTeachersList.push(piket.piket4);
+                    if (piket.piket5) currentPiketTeachersList.push(piket.piket5);
+                    if (piket.piket6) currentPiketTeachersList.push(piket.piket6);
 
                     // Bikin kartu guru
                     const createGuruCard = (nama, label, iconClass, colorClass) => {
@@ -580,6 +598,9 @@
                     container.innerHTML += createGuruCard(piket.piket1, 'Guru Piket 1', 'fas fa-user-tie', '#3b82f6');
                     container.innerHTML += createGuruCard(piket.piket2, 'Guru Piket 2', 'fas fa-user', '#10b981');
                     container.innerHTML += createGuruCard(piket.piket3, 'Guru Piket 3', 'fas fa-user', '#f59e0b');
+                    container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
+                    container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
+                    container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
                 });
 
             } catch (err) {
@@ -613,7 +634,10 @@
                     const isPetugas = data.some(p => 
                         p.piket1 === session.nama || 
                         p.piket2 === session.nama || 
-                        p.piket3 === session.nama
+                        p.piket3 === session.nama ||
+                        p.piket4 === session.nama ||
+                        p.piket5 === session.nama ||
+                        p.piket6 === session.nama
                     );
                     if (isPetugas) isPiketToday = true;
                 }
