@@ -262,6 +262,37 @@
             .navbar-date {
                 display: none !important;
             }
+            .main-content {
+                padding: 1rem;
+            }
+            .table-header-actions {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .action-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            .action-controls .btn, .action-controls #searchPembinaan {
+                width: 100% !important;
+                justify-content: center;
+            }
+        }
+
+        .table-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .action-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         @media (min-width: 769px) {
@@ -816,4 +847,3 @@
     </script>
 </body>
 </html>
-
