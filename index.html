@@ -19,10 +19,11 @@
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('bg1.png');
             background-size: cover;
             background-position: center;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow-y: auto;
         }
 
         .login-container {
@@ -223,13 +224,14 @@
         @media (max-width: 768px) {
             .login-container {
                 flex-direction: column;
-                max-width: 400px;
+                max-width: 90%;
                 margin: 20px;
             }
             .login-left {
-                padding: 2rem;
+                padding: 2rem 1.5rem;
             }
-            .login-left h1 { font-size: 1.4rem; }
+            /* Sesuai permintaan: Logo langsung Slogan, H1 (Nama Sekolah) disembunyikan di mobile */
+            .login-left h1 { display: none; }
             .school-logo { width: 80px; }
             .login-right { padding: 2rem; }
         }
