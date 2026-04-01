@@ -238,7 +238,7 @@
             background: transparent;
             border: 1px solid white;
             color: white;
-            padding: 8px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: 600;
@@ -252,6 +252,13 @@
             background-color: white;
             color: var(--navbar-bg);
         }
+
+        /* Gaya Kontainer Dark Mode */
+        .card-dark {
+            background-color: #1f2937 !important;
+            border: 1px solid #374151;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -262,8 +269,8 @@
             <img src="" alt="Logo Sekolah" style="display: none;">
             <span></span>
         </a>
-        <button class="btn-logout-nav" onclick="if(confirm('Apakah Anda yakin ingin keluar?')) window.location.href = 'index.html'">
-            <i class="fas fa-sign-out-alt"></i> Logout
+        <button class="btn-logout-nav" onclick="if(confirm('Apakah Anda yakin ingin keluar?')) window.location.href = 'index.html'" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
         </button>
     </nav>
 
@@ -317,7 +324,7 @@
         </div>
 
         <!-- Wadah Menu Grid -->
-        <div class="dashboard-card">
+        <div class="dashboard-card card-dark">
             <div class="menu-grid">
                 <a href="piketharin.html" class="menu-card" id="piketLink">
                     <div class="icon-box" style="background-color: #3b82f6;">
