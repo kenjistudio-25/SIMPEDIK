@@ -343,6 +343,31 @@
             transform: translateY(-50%); color: #999; 
         }
         @media (max-width: 768px) { .search-box { width: 100%; margin-top: 10px; } }
+
+        /* Optimasi Tata Letak Aksi (Mobile) */
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .action-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .table-actions { flex-direction: column; align-items: stretch; }
+            .action-group { flex-direction: column; width: 100%; }
+            .action-group .btn, .action-group .search-box { 
+                width: 100%; 
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -458,21 +483,21 @@
         
         <!-- Wadah Tabel Siswa -->
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="table-actions">
+                <div class="action-group">
                     <button class="btn btn-primary" id="addSiswaBtn"><i class="fas fa-plus"></i> Tambah Siswa</button>
                     <div class="search-box" title="Cari data siswa">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Cari NISN atau Nama...">
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div class="action-group">
                     <button class="btn btn-warning" id="exportTemplateBtn"><i class="fas fa-file-excel"></i> Export Template</button>
                     <button class="btn btn-success" id="importBtn"><i class="fas fa-file-import"></i> Import Excel/CSV</button>
                     <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
                 </div>
-                <input type="file" id="importFile" accept=".csv, .xlsx, .xls" style="display: none;" title="Pilih file Excel atau CSV untuk diimport">
             </div>
+            <input type="file" id="importFile" accept=".csv, .xlsx, .xls" style="display: none;" title="Pilih file Excel atau CSV untuk diimport">
 
             <div class="table-responsive">
                 <table class="custom-table">
@@ -1043,4 +1068,3 @@
     </script>
 </body>
 </html>
-
