@@ -398,8 +398,8 @@
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">NIP</label>
-                    <input type="text" id="editNip" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f3f4f6; cursor: not-allowed;">
-                    <small style="color: #888;">NIP tidak dapat diubah.</small>
+                    <input type="text" id="editNip" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <small style="color: #888;">Ubah NIP jika diperlukan.</small>
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Mata Pelajaran</label>
@@ -617,12 +617,19 @@
                 }
 
                 try {
-                    const nama = document.getElementById('editNama').value;
-                    const mapel = document.getElementById('editMapel').value;
-                    const tlp = document.getElementById('editTlp').value;
+                    const nama = document.getElementById('editNama').value.trim();
+                    const nip = document.getElementById('editNip').value.trim();
+                    const mapel = document.getElementById('editMapel').value.trim();
+                    const tlp = document.getElementById('editTlp').value.trim();
                     const password = document.getElementById('editPassword').value;
                     const photoInput = document.getElementById('editPhoto');
                     
+                    // Cek Input Angka (Hanya jika field diisi)
+                    const isNumeric = (str) => /^\d+$/.test(str);
+                    if (nip && !isNumeric(nip)) {
+                        throw new Error("NIP harus berkarakter angka");
+                    }
+
                     let photoUrl = currentGuruData.photo;
 
                     // Upload foto kalo ada
@@ -649,8 +656,9 @@
                         .from('dataguru')
                         .update({
                             nama_guru: nama,
-                            mapel: mapel,
-                            tlp: tlp,
+                            nip: nip || null,
+                            mapel: mapel || null,
+                            tlp: tlp || null,
                             photo: photoUrl,
                             password: password
                         })
@@ -662,6 +670,7 @@
                     const session = JSON.parse(sessionStorage.getItem('guru_session'));
                     if(session) {
                         session.nama = nama;
+                        session.nip = nip;
                         session.photo = photoUrl;
                         sessionStorage.setItem('guru_session', JSON.stringify(session));
                     }
