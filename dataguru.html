@@ -686,9 +686,10 @@
                 if (guru.photo) {
                     imagePreview.src = guru.photo;
                     imagePreviewContainer.style.display = 'block';
-                    fileNameDisplay.textContent = 'Foto saat ini tersimpan (Upload baru untuk mengganti)';
+                    fileNameDisplay.textContent = 'Foto saat ini tersimpan';
                     fileNameDisplay.style.display = 'block';
                 } else {
+                    imagePreview.src = '';
                     imagePreviewContainer.style.display = 'none';
                     fileNameDisplay.style.display = 'none';
                 }
@@ -750,17 +751,20 @@
 
             try {
                 const isEdit = isEditModeInput.value === "true";
-                const nipVal = document.getElementById('nip').value;
-                const tlpVal = document.getElementById('telepon').value;
+                const nipVal = document.getElementById('nip').value.trim();
+                const tlpVal = document.getElementById('telepon').value.trim();
 
-                // Cek Input Angka
+                // Cek Input Angka (Hanya jika field diisi)
                 const isNumeric = (str) => /^\d+$/.test(str);
-                if ((nipVal && !isNumeric(nipVal)) || (tlpVal && !isNumeric(tlpVal))) {
-                    throw new Error("NIP dan Nomor Telepon harus berkarakter angka");
+                if (nipVal && !isNumeric(nipVal)) {
+                    throw new Error("NIP harus berkarakter angka");
+                }
+                if (tlpVal && !isNumeric(tlpVal)) {
+                    throw new Error("Nomor Telepon harus berkarakter angka");
                 }
                 
                 // 1. Upload Foto ke 'aset'
-                let photoUrl = isEdit ? (imagePreview.src || '') : ''; // Default ke foto lama jika edit
+                let photoUrl = isEdit ? (imagePreview.src || null) : null; 
                 const file = photoInput.files[0];
                 
                 if (file) {
@@ -780,13 +784,13 @@
 
                 // 2. Siapin Data
                 const guruData = {
-                    id_guru: idGuruInput.value,
-                    nama_guru: document.getElementById('namaGuru').value,
-                    nip: nipVal,
-                    mapel: document.getElementById('mapel').value,
-                    tlp: tlpVal,
+                    id_guru: idGuruInput.value.trim(),
+                    nama_guru: document.getElementById('namaGuru').value.trim(),
+                    nip: nipVal || null,
+                    mapel: document.getElementById('mapel').value.trim() || null,
+                    tlp: tlpVal || null,
                     photo: photoUrl,
-                    password: passwordInput.value
+                    password: passwordInput.value.trim() || null
                 };
 
                 let result;
