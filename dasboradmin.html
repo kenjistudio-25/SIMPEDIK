@@ -302,7 +302,23 @@
         .card-header h3 { font-size: 1.1rem; color: #444; }
 
         /* Gaya Tabel */
-        .table-responsive { overflow-x: auto; }
+        .table-responsive { 
+            overflow-x: auto; 
+            max-height: 500px; 
+            overflow-y: auto; 
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
         .custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #f1f1f1; }
         .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
@@ -312,7 +328,7 @@
         .bg-warning { background-color: #f1c40f; color: #333; }
         .bg-success { background-color: #2ecc71; }
 
-        /* Kaki Halaman */
+        /* footer */
         .main-footer {
             text-align: center;
             padding: 20px;
@@ -336,7 +352,7 @@
             display: block;
         }
 
-        /* Header Stats Grid Layout */
+        /* Header Stats Grid  */
         .header-stats-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -533,6 +549,42 @@
             </div>
         </div>
 
+        <!-- Container Data Guru -->
+        <div class="dashboard-card card-dark">
+            <div class="card-header">
+                <h3><i class="fas fa-chalkboard-teacher" style="color: #60a5fa;"></i> Data Guru</h3>
+            </div>
+            
+            <!-- Card Jumlah Total Guru -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card" style="background-color: #111827; border: 1px solid #374151;">
+                    <div class="stat-info">
+                        <h3 id="totalGuruCount" style="color: #fff;">0</h3>
+                        <p style="color: #9ca3af;">Jumlah Total Guru</p>
+                    </div>
+                    <i class="fas fa-chalkboard-teacher stat-icon" style="color: #60a5fa; opacity: 0.5;"></i>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Id Guru</th>
+                            <th>Nama Guru</th>
+                            <th>NIP</th>
+                            <th>Mata Pelajaran</th>
+                            <th>Nomor Telepon</th>
+                            <th>Photo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guruTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Memuat data guru...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Kartu Tabel Rombel -->
         <div class="dashboard-card card-dark">
             <div class="card-header">
@@ -675,6 +727,39 @@
                     
                     if (!siswaError) {
                         document.getElementById('totalSiswa').textContent = (siswaCount || 0).toLocaleString();
+                    }
+
+                    // 1.5. Data Guru
+                    const { data: guruData, error: guruError, count: guruCount } = await supabaseClient
+                        .from('dataguru')
+                        .select('id_guru, nama_guru, nip, mapel, tlp, photo', { count: 'exact' })
+                        .order('nama_guru', { ascending: true });
+
+                    if (!guruError) {
+                        document.getElementById('totalGuruCount').textContent = (guruCount || 0).toLocaleString();
+                        
+                        const guruTbody = document.getElementById('guruTableBody');
+                        guruTbody.innerHTML = '';
+                        
+                        if (guruData && guruData.length > 0) {
+                            guruData.forEach(guru => {
+                                const photoHtml = guru.photo 
+                                    ? `<img src="${guru.photo}" alt="${guru.nama_guru}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #374151;">` 
+                                    : `<div style="width:40px;height:40px;border-radius:50%;background:#374151;display:flex;align-items:center;justify-content:center;color:#9ca3af;border:1px solid #4b5563;"><i class="fas fa-user"></i></div>`;
+                                    
+                                const row = `<tr>
+                                    <td>${guru.id_guru}</td>
+                                    <td>${guru.nama_guru}</td>
+                                    <td>${guru.nip || '-'}</td>
+                                    <td>${guru.mapel || '-'}</td>
+                                    <td>${guru.tlp || '-'}</td>
+                                    <td>${photoHtml}</td>
+                                </tr>`;
+                                guruTbody.innerHTML += row;
+                            });
+                        } else {
+                            guruTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada data guru.</td></tr>';
+                        }
                     }
 
                     // 2. Load Rombel Data
@@ -1036,4 +1121,3 @@
     </script>
 </body>
 </html>
-
