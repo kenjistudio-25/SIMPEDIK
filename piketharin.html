@@ -609,9 +609,6 @@
                     if (p.piket4) teacherNames.push(p.piket4);
                     if (p.piket5) teacherNames.push(p.piket5);
                     if (p.piket6) teacherNames.push(p.piket6);
-                    if (p.piket4) teacherNames.push(p.piket4);
-                    if (p.piket5) teacherNames.push(p.piket5);
-                    if (p.piket6) teacherNames.push(p.piket6);
                 });
 
                 let photoMap = {};
@@ -634,9 +631,6 @@
                     if (piket.piket1) currentPiketTeachers.push({ name: piket.piket1, nip: nipMap[piket.piket1] });
                     if (piket.piket2) currentPiketTeachers.push({ name: piket.piket2, nip: nipMap[piket.piket2] });
                     if (piket.piket3) currentPiketTeachers.push({ name: piket.piket3, nip: nipMap[piket.piket3] });
-                    if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
-                    if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
-                    if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
                     if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
                     if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
                     if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
@@ -664,9 +658,6 @@
                     container.innerHTML += createGuruCard(piket.piket1, 'Guru Piket 1', 'fas fa-user-tie', '#3b82f6');
                     container.innerHTML += createGuruCard(piket.piket2, 'Guru Piket 2', 'fas fa-user', '#10b981');
                     container.innerHTML += createGuruCard(piket.piket3, 'Guru Piket 3', 'fas fa-user', '#f59e0b');
-                    container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
-                    container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
-                    container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
                     container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
                     container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
                     container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
