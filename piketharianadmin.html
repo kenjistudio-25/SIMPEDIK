@@ -325,14 +325,45 @@
         .custom-table tr:hover {
             background-color: #374151;
         }
+        
+        /* Gaya Baru untuk Toolbar yang Simetris */
+        .toolbar-container {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            gap: 15px;
+        }
+
+        .toolbar-group {
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap;
+        }
 
         @media (max-width: 768px) {
             .search-box {
                 width: 100%;
-                margin-top: 10px;
             }
             .search-box input {
                 width: 100%;
+            }
+            
+            .toolbar-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .toolbar-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .toolbar-group .btn, 
+            .toolbar-group input, 
+            .toolbar-group select {
+                width: 100% !important;
             }
         }
 
@@ -488,10 +519,16 @@
         </div>
 
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 10px;">
+            <div class="toolbar-container">
+                <div class="toolbar-group">
                     <button class="btn btn-primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
                     <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
+                </div>
+                <div class="toolbar-group">
+                    <input type="date" id="filterDate" title="Filter Tanggal" style="padding: 8px; border: 1px solid #4b5563; border-radius: 5px; background-color: #374151; color: white;">
+                    <select id="filterKelas" title="Filter Kelas" style="padding: 8px; border: 1px solid #4b5563; border-radius: 5px; background-color: #374151; color: white; min-width: 150px;">
+                        <option value="">Semua Kelas</option>
+                    </select>
                 </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Cari data...">
@@ -559,6 +596,31 @@
                 }
             }
             document.addEventListener('DOMContentLoaded', loadSchoolIdentity);
+
+            async function loadKelasOptions() {
+                const select = document.getElementById('filterKelas');
+                if (!select) return;
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('rombel')
+                        .select('nama_kelas')
+                        .order('nama_kelas');
+                    
+                    if (error) throw error;
+                    
+                    if (data) {
+                        data.forEach(r => {
+                            const opt = document.createElement('option');
+                            opt.value = r.nama_kelas;
+                            opt.textContent = r.nama_kelas;
+                            select.appendChild(opt);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Error loading kelas options:", err);
+                }
+            }
+            document.addEventListener('DOMContentLoaded', loadKelasOptions);
         }
 
         const menuToggle = document.getElementById('menuToggle');
@@ -652,17 +714,23 @@
             currentPage = page;
             const tableBody = document.getElementById('jurnalTableBody');
             const searchFilter = document.getElementById('searchInput').value.toLowerCase();
+            const dateFilter = document.getElementById('filterDate').value;
+            const kelasFilter = document.getElementById('filterKelas').value;
 
             const filteredData = jurnalDataList.filter(item => {
-                const text = (
+                const matchesSearch = (
                     (item.id_piket || '') + ' ' +
                     (item.nama_siswa || '') + ' ' + 
                     (item.kelas || '') + ' ' + 
                     (item.area || '') + ' ' + 
                     (item.nisn || '') + ' ' +
                     (item.id_petugas || '')
-                ).toLowerCase();
-                return text.includes(searchFilter);
+                ).toLowerCase().includes(searchFilter);
+
+                const matchesDate = !dateFilter || (item.tanggal && item.tanggal === dateFilter);
+                const matchesKelas = !kelasFilter || (item.kelas && item.kelas === kelasFilter);
+
+                return matchesSearch && matchesDate && matchesKelas;
             });
 
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -743,6 +811,8 @@
         }
 
         document.getElementById('searchInput').addEventListener('input', () => renderTable(1));
+        document.getElementById('filterDate').addEventListener('change', () => renderTable(1));
+        document.getElementById('filterKelas').addEventListener('change', () => renderTable(1));
         document.getElementById('refreshBtn').addEventListener('click', loadJurnalData);
 
         document.getElementById('exportPdfBtn').addEventListener('click', async () => {
@@ -784,22 +854,24 @@
 
             const searchInput = document.getElementById('searchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const dateFilter = document.getElementById('filterDate').value;
+            const kelasFilter = document.getElementById('filterKelas').value;
             
-            let dataToExport = jurnalDataList;
+            let dataToExport = jurnalDataList.filter(item => {
+                const matchesSearch = (
+                    (item.id_piket || '') + ' ' +
+                    (item.nama_siswa || '') + ' ' + 
+                    (item.kelas || '') + ' ' + 
+                    (item.area || '') + ' ' + 
+                    (item.nisn || '') + ' ' +
+                    (item.id_petugas || '')
+                ).toLowerCase().includes(searchTerm);
 
-            if (searchTerm) {
-                dataToExport = jurnalDataList.filter(item => {
-                    const text = (
-                        (item.id_piket || '') + ' ' +
-                        (item.nama_siswa || '') + ' ' + 
-                        (item.kelas || '') + ' ' + 
-                        (item.area || '') + ' ' + 
-                        (item.nisn || '') + ' ' +
-                        (item.id_petugas || '')
-                    ).toLowerCase();
-                    return text.includes(searchTerm);
-                });
-            }
+                const matchesDate = !dateFilter || (item.tanggal && item.tanggal === dateFilter);
+                const matchesKelas = !kelasFilter || (item.kelas && item.kelas === kelasFilter);
+
+                return matchesSearch && matchesDate && matchesKelas;
+            });
 
             const tableBody = dataToExport.map(item => {
                 let formattedDate = item.tanggal;
@@ -835,4 +907,3 @@
     </script>
 </body>
 </html>
-
