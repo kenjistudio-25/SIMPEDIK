@@ -331,6 +331,33 @@
         .btn-primary { background-color: var(--primary-color); }
         .btn-danger { background-color: #ef4444; }
 
+        /* Gaya Toolbar agar Simetris */
+        .toolbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .toolbar-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        /* Menyelaraskan tinggi elemen */
+        .toolbar-group .btn, 
+        .toolbar-group input {
+            height: 38px;
+            box-sizing: border-box;
+        }
+        
+        #searchInput {
+            padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 250px; outline: none;
+        }
+
         .main-footer {
             text-align: center;
             padding: 20px;
@@ -363,6 +390,15 @@
         @media (min-width: 769px) {
             .sidebar.active ~ .main-content {
                 margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar-container { flex-direction: column; align-items: stretch; }
+            .toolbar-group { flex-direction: column; width: 100%; }
+            .toolbar-group .btn, 
+            .toolbar-group #searchInput { 
+                width: 100% !important; 
             }
         }
     </style>
@@ -478,12 +514,12 @@
         </div>
 
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 10px;">
+            <div class="toolbar-container">
+                <div class="toolbar-group">
                     <button class="btn btn-danger" id="btnExportPdf"><i class="fas fa-file-pdf"></i> Export PDF</button>
                 </div>
-                <div>
-                    <input type="text" id="searchInput" placeholder="Cari Siswa..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                <div class="toolbar-group">
+                    <input type="text" id="searchInput" placeholder="Cari Siswa...">
                 </div>
             </div>
 
