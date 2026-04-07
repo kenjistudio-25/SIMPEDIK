@@ -412,6 +412,56 @@
         
         .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: opacity 0.2s; }
         .btn-danger { background-color: #ef4444; }
+
+        /* Style Filter Dropdown */
+        .filter-select {
+            padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; color: #333; outline: none;
+            height: 38px; /* Menyamakan tinggi */
+            box-sizing: border-box;
+            display: inline-block;
+        }
+
+        /* Gaya Toolbar agar Simetris */
+        .toolbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .toolbar-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        /* Menyelaraskan elemen input pencarian agar simetris vertikal */
+        .search-input-custom {
+            padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;
+            height: 38px; /* Menyamakan tinggi */
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        /* Memastikan tombol memiliki tinggi yang sama dengan input/select */
+        .toolbar-group .btn {
+            height: 38px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar-container { flex-direction: column; align-items: stretch; }
+            .toolbar-group { flex-direction: column; width: 100%; }
+            .toolbar-group .btn, 
+            .toolbar-group .filter-select, 
+            .toolbar-group input { 
+                width: 100% !important; 
+                margin: 0;
+            }
+            .toolbar-container h3 { text-align: center; width: 100%; margin-bottom: 5px; }
+        }
     </style>
 </head>
 <body>
@@ -529,7 +579,10 @@
                 <h3 style="margin: 0; color: #333;">Data Detail Pembinaan</h3>
                 <div style="display: flex; gap: 10px;">
                     <button id="exportPdfBtn" class="btn btn-danger"><i class="fas fa-file-pdf"></i> Export PDF</button>
-                    <input type="text" id="searchPembinaan" placeholder="Cari Siswa / Kasus..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                    <select id="filterKelasDetail" class="filter-select">
+                        <option value="">Semua Kelas</option>
+                    </select>
+                    <input type="text" id="searchPembinaan" class="search-input-custom" placeholder="Cari Siswa / Kasus...">
                 </div>
             </div>
             <div class="table-responsive">
@@ -540,6 +593,7 @@
                             <th>Id Pembinaan</th>
                             <th>Nama Siswa</th>
                             <th>NISN</th>
+                            <th>Kelas</th>
                             <th>Tanggal</th>
                             <th>Kasus</th>
                             <th>Guru Pembina</th>
@@ -547,7 +601,7 @@
                         </tr>
                     </thead>
                     <tbody id="pembinaanTableBody">
-                        <tr><td colspan="8" style="text-align: center;">Memuat data...</td></tr>
+                        <tr><td colspan="9" style="text-align: center;">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -689,28 +743,63 @@
 
             document.addEventListener('DOMContentLoaded', loadPembinaanStats);
 
+            async function loadKelasFilterOptions() {
+                const select = document.getElementById('filterKelasDetail');
+                try {
+                    const { data } = await supabaseClient.from('rombel').select('nama_kelas').order('nama_kelas');
+                    if (data) {
+                        data.forEach(r => {
+                            const opt = document.createElement('option');
+                            opt.value = r.nama_kelas;
+                            opt.textContent = r.nama_kelas;
+                            select.appendChild(opt);
+                        });
+                    }
+                } catch (err) { console.error(err); }
+            }
+            document.addEventListener('DOMContentLoaded', loadKelasFilterOptions);
+
             async function loadPembinaanTable() {
                 const tbody = document.getElementById('pembinaanTableBody');
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Memuat data...</td></tr>';
+                const classFilter = document.getElementById('filterKelasDetail').value;
+                const searchTerm = document.getElementById('searchPembinaan').value.toLowerCase();
+
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center;">Memuat data...</td></tr>`;
 
                 try {
+                    // Ambil pemetaan NISN ke Kelas
+                    const { data: perwalianData } = await supabaseClient.from('perwalian').select('nisn, kelas');
+                    const nisnToKelas = {};
+                    if (perwalianData) perwalianData.forEach(p => nisnToKelas[p.nisn] = p.kelas);
+
                     const { data, error } = await supabaseClient
                         .from('pembinaanwali')
                         .select('*')
                         .order('tanggal', { ascending: false });
 
                     if (error) throw error;
+                    
+                    const filteredData = (data || []).filter(item => {
+                        const itemKelas = nisnToKelas[item.nisn] || '-';
+                        const matchesClass = !classFilter || itemKelas === classFilter;
+                        const matchesSearch = !searchTerm || 
+                            (item.nama_siswa || '').toLowerCase().includes(searchTerm) ||
+                            (item.kasus || '').toLowerCase().includes(searchTerm) ||
+                            (item.nisn || '').toLowerCase().includes(searchTerm);
+                        return matchesClass && matchesSearch;
+                    });
 
                     tbody.innerHTML = '';
                     
-                    if (!data || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Belum ada data pembinaan.</td></tr>';
+                    if (filteredData.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Data tidak ditemukan.</td></tr>';
                         return;
                     }
 
-                    data.forEach((item, index) => {
+                    filteredData.forEach((item, index) => {
                         const dateStr = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
                         const photoHtml = item.photo ? `<a href="${item.photo}" target="_blank" style="color: var(--primary-color); text-decoration: none;"><i class="fas fa-image"></i> Lihat</a>` : '-';
+                        const itemKelas = nisnToKelas[item.nisn] || '-';
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -718,6 +807,7 @@
                             <td>${item.id_pembinaan || '-'}</td>
                             <td>${item.nama_siswa || '-'}</td>
                             <td>${item.nisn || '-'}</td>
+                            <td>${itemKelas}</td>
                             <td>${dateStr}</td>
                             <td>${item.kasus || '-'}</td>
                             <td>${item.guru_wali || '-'}</td>
@@ -725,22 +815,9 @@
                         `;
                         tbody.appendChild(row);
                     });
-
-                    const searchInput = document.getElementById('searchPembinaan');
-                    if (searchInput) {
-                        searchInput.addEventListener('input', (e) => {
-                            const term = e.target.value.toLowerCase();
-                            const rows = tbody.querySelectorAll('tr');
-                            rows.forEach(row => {
-                                const text = row.innerText.toLowerCase();
-                                row.style.display = text.includes(term) ? '' : 'none';
-                            });
-                        });
-                    }
-
                 } catch (err) {
                     console.error("Error loading table:", err);
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Gagal memuat data: ${err.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: red;">Gagal memuat data: ${err.message}</td></tr>`;
                 }
             }
 
@@ -764,6 +841,9 @@
             };
 
             document.addEventListener('DOMContentLoaded', loadPembinaanTable);
+            
+            document.getElementById('filterKelasDetail').addEventListener('change', loadPembinaanTable);
+            document.getElementById('searchPembinaan').addEventListener('input', loadPembinaanTable);
 
             document.getElementById('exportPdfBtn').addEventListener('click', async () => {
                 const { jsPDF } = window.jspdf;
@@ -800,7 +880,7 @@
                     html: '#pembinaanTable',
                     startY: yPos,
                     theme: 'grid',
-                    columns: [0, 1, 2, 3, 4, 5, 6], 
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7], 
                     headStyles: { fillColor: [102, 126, 234] }
                 });
 
