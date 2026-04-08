@@ -559,7 +559,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3, piket4, piket5, piket6')
+                    .select('piket1, piket2, piket3, piket4, piket5, piket6, piket7')
                     .eq('hari', hariIni);
 
                 if (error) throw error;
@@ -575,7 +575,8 @@
                         piket.piket3 === namaGuru ||
                         piket.piket4 === namaGuru ||
                         piket.piket5 === namaGuru ||
-                        piket.piket6 === namaGuru
+                        piket.piket6 === namaGuru ||
+                        piket.piket7 === namaGuru
                     );
                 }
 
@@ -609,6 +610,7 @@
                     if (p.piket4) teacherNames.push(p.piket4);
                     if (p.piket5) teacherNames.push(p.piket5);
                     if (p.piket6) teacherNames.push(p.piket6);
+                    if (p.piket7) teacherNames.push(p.piket7);
                 });
 
                 let photoMap = {};
@@ -634,6 +636,7 @@
                     if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
                     if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
                     if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
+                    if (piket.piket7) currentPiketTeachers.push({ name: piket.piket7, nip: nipMap[piket.piket7] });
 
                     const createGuruCard = (nama, label, iconClass, colorClass) => {
                         if (!nama) return '';
@@ -661,6 +664,7 @@
                     container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
                     container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
                     container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
+                    container.innerHTML += createGuruCard(piket.piket7, 'Guru Piket 7', 'fas fa-user', '#ec4899');
                 });
 
             } catch (err) {
@@ -1748,6 +1752,15 @@
                     doc.text("Guru Piket 6", colWidth * 2.5, secondRowY, { align: "center" });
                     doc.text(g6 ? g6.name : "( .............................. )", colWidth * 2.5, secondRowY + 25, { align: "center" });
                     if (g6 && g6.nip) doc.text(`NIP. ${g6.nip}`, colWidth * 2.5, secondRowY + 30, { align: "center" });
+
+                    // Baris Ketiga Tanda Tangan (Guru 7)
+                    const thirdRowY = secondRowY + 45;
+                    const g7 = currentPiketTeachers[6];
+                    if (g7) {
+                        doc.text("Guru Piket 7", colWidth * 0.5, thirdRowY, { align: "center" });
+                        doc.text(g7.name, colWidth * 0.5, thirdRowY + 25, { align: "center" });
+                        if (g7.nip) doc.text(`NIP. ${g7.nip}`, colWidth * 0.5, thirdRowY + 30, { align: "center" });
+                    }
 
                     doc.save(`Laporan_Lengkap_Piket_Siswa_${monthName}.pdf`);
                 } catch (err) {
