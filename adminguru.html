@@ -523,7 +523,12 @@
                     currentGuruData = data; // Simpen ke global
                     document.getElementById('biodataContainer').style.display = 'block';
                     document.getElementById('bioNama').textContent = data.nama_guru || '-';
-                    document.getElementById('bioNip').textContent = data.nip || '-';
+                    let maskedNip = '-';
+                    if (data.nip) {
+                        const nipStr = data.nip.toString();
+                        maskedNip = nipStr.length > 8 ? nipStr.slice(0, -8) + '********' : '********';
+                    }
+                    document.getElementById('bioNip').textContent = maskedNip;
                     document.getElementById('bioMapel').textContent = data.mapel || '-';
                     document.getElementById('bioTlp').textContent = data.tlp || '-';
                     
