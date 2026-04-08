@@ -875,12 +875,13 @@
                             <th style="min-width: 200px;">Guru Piket 4</th>
                             <th style="min-width: 200px;">Guru Piket 5</th>
                             <th style="min-width: 200px;">Guru Piket 6</th>
+                            <th style="min-width: 200px;">Guru Piket 7</th>
                             <th style="width: 120px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="piketTableBody">
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 <div class="loading">
                                     <div class="spinner"></div>
                                 </div>
@@ -983,6 +984,15 @@
                             <i class="fas fa-user"></i> Guru Piket 6 (Pendamping)
                         </label>
                         <select id="guru6" name="guru6">
+                            <option value="">Pilih Guru Pendamping (Opsional)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="guru7">
+                            <i class="fas fa-user"></i> Guru Piket 7 (Pendamping)
+                        </label>
+                        <select id="guru7" name="guru7">
                             <option value="">Pilih Guru Pendamping (Opsional)</option>
                         </select>
                     </div>
@@ -1101,7 +1111,7 @@
 
         // --- Muat Opsi Guru ---
         async function loadGuruOptions() {
-            const selects = ['guru1', 'guru2', 'guru3', 'guru4', 'guru5', 'guru6'];
+            const selects = ['guru1', 'guru2', 'guru3', 'guru4', 'guru5', 'guru6', 'guru7'];
             
             try {
                 const { data, error } = await supabaseClient
@@ -1128,7 +1138,7 @@
                 });
             } catch (err) {
                 console.error('Error loading guru options:', err);
-                alert('Gagal memuat data guru');
+                // alert('Gagal memuat data guru'); // Commented out to avoid multiple alerts
             }
         }
 
@@ -1137,7 +1147,7 @@
             const tableBody = document.getElementById('piketTableBody');
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="10">
+                    <td colspan="11">
                         <div class="loading">
                             <div class="spinner"></div>
                         </div>
@@ -1162,7 +1172,7 @@
                 console.error('Error loading piket data:', err);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="empty-state">
+                        <td colspan="11" class="empty-state">
                             <i class="fas fa-exclamation-triangle"></i>
                             <h4>Gagal memuat data</h4>
                             <p>${err.message}</p>
@@ -1179,7 +1189,7 @@
             if (!data || data.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="empty-state">
+                        <td colspan="11" class="empty-state">
                             <i class="fas fa-calendar-times"></i>
                             <h4>Belum ada data guru piket</h4>
                             <p>Klik "Tambah Guru Piket" untuk menambahkan data</p>
@@ -1239,8 +1249,14 @@
                         </div>
                     </td>
                     <td>
+                        <div class="guru-name">
+                            <i class="fas fa-user guru-icon"></i>
+                            <span>${piket.piket7 || '-'}</span>
+                        </div>
+                    </td>
+                    <td>
                         <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editPiket('${escapeSingleQuote(piket.id)}', '${escapeSingleQuote(piket.hari || '')}', '${escapeSingleQuote(piket.piket1 || '')}', '${escapeSingleQuote(piket.piket2 || '')}', '${escapeSingleQuote(piket.piket3 || '')}', '${escapeSingleQuote(piket.piket4 || '')}', '${escapeSingleQuote(piket.piket5 || '')}', '${escapeSingleQuote(piket.piket6 || '')}')" title="Edit">
+                            <button class="btn-action btn-edit" onclick="editPiket('${escapeSingleQuote(piket.id)}', '${escapeSingleQuote(piket.hari || '')}', '${escapeSingleQuote(piket.piket1 || '')}', '${escapeSingleQuote(piket.piket2 || '')}', '${escapeSingleQuote(piket.piket3 || '')}', '${escapeSingleQuote(piket.piket4 || '')}', '${escapeSingleQuote(piket.piket5 || '')}', '${escapeSingleQuote(piket.piket6 || '')}', '${escapeSingleQuote(piket.piket7 || '')}')" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-action btn-delete" onclick="deletePiket('${escapeSingleQuote(piket.id)}')" title="Hapus">
@@ -1295,7 +1311,8 @@
                         (piket.piket3 && piket.piket3.toLowerCase().includes(searchTerm)) ||
                         (piket.piket4 && piket.piket4.toLowerCase().includes(searchTerm)) ||
                         (piket.piket5 && piket.piket5.toLowerCase().includes(searchTerm)) ||
-                        (piket.piket6 && piket.piket6.toLowerCase().includes(searchTerm))
+                        (piket.piket6 && piket.piket6.toLowerCase().includes(searchTerm)) ||
+                        (piket.piket7 && piket.piket7.toLowerCase().includes(searchTerm))
                     );
                 }
                 
@@ -1315,7 +1332,7 @@
         }
 
         // --- Fungsi Edit & Hapus ---
-        window.editPiket = async function(id, hari, g1, g2, g3, g4, g5, g6) {
+        window.editPiket = async function(id, hari, g1, g2, g3, g4, g5, g6, g7) {
             await loadGuruOptions();
             
             idPiketInput.value = id;
@@ -1326,6 +1343,7 @@
             document.getElementById('guru4').value = g4 || '';
             document.getElementById('guru5').value = g5 || '';
             document.getElementById('guru6').value = g6 || '';
+            document.getElementById('guru7').value = g7 || '';
             
             isEditModeInput.value = "true";
             originalIdInput.value = id;
@@ -1365,6 +1383,7 @@
             const guru4 = document.getElementById('guru4').value;
             const guru5 = document.getElementById('guru5').value;
             const guru6 = document.getElementById('guru6').value;
+            const guru7 = document.getElementById('guru7').value;
 
             // Validasi Dulu
             if (!idPiket) {
@@ -1389,7 +1408,8 @@
                 piket3: guru3 || null,
                 piket4: guru4 || null,
                 piket5: guru5 || null,
-                piket6: guru6 || null
+                piket6: guru6 || null,
+                piket7: guru7 || null
             };
 
             // Tunjukin Loading
@@ -1517,12 +1537,13 @@
                     piket.piket3 || '-',
                     piket.piket4 || '-',
                     piket.piket5 || '-',
-                    piket.piket6 || '-'
+                    piket.piket6 || '-',
+                    piket.piket7 || '-'
                 ]);
 
                 // Bikin Tabel PDF
                 doc.autoTable({
-                    head: [['No', 'ID Guru Piket', 'Hari', 'Guru Piket 1', 'Guru Piket 2', 'Guru Piket 3', 'Guru Piket 4', 'Guru Piket 5', 'Guru Piket 6']],
+                    head: [['No', 'ID Guru Piket', 'Hari', 'Guru Piket 1', 'Guru Piket 2', 'Guru Piket 3', 'Guru Piket 4', 'Guru Piket 5', 'Guru Piket 6', 'Guru Piket 7']],
                     body: tableData,
                     startY: yPos,
                     theme: 'grid',
@@ -1539,7 +1560,7 @@
                     alternateRowStyles: {
                         fillColor: [248, 250, 252]
                     },
-                    margin: { top: 45 }
+                    margin: { top: 10 }
                 });
 
                 // Total Data
