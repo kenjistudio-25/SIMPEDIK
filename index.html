@@ -911,6 +911,17 @@
             });
         });
     </script>
+    <script>
+/* 🔐 Anti Inspect */
+setInterval(() => {
+    const devtoolsOpen = window.outerWidth - window.innerWidth > 150 ||
+                         window.outerHeight - window.innerHeight > 150;
+
+    if (devtoolsOpen) {
+        document.body.innerHTML = "<h1>Akses ditolak</h1>";
+    }
+}, 1000);
+</script>
          <!-- 🔥 SERVICE WORKER -->
     <script>
     if ('serviceWorker' in navigator) {
