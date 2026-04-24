@@ -1786,6 +1786,10 @@
                 doc.save(`Laporan_Perkembangan_${kelas}_${mapelName}.pdf`);
             });
         }
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
     </script>
 </body>
 
