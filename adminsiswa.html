@@ -778,6 +778,11 @@
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
             }
         }
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
+        
     </script>
 </body>
 </html>
