@@ -1186,6 +1186,10 @@
         document.getElementById('searchDispensasi').addEventListener('input', filterTable);
         document.getElementById('filterKelas').addEventListener('change', filterTable);
         document.getElementById('filterTanggal').addEventListener('change', filterTable);
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
     </script>
 </body>
 </html>
