@@ -680,6 +680,10 @@
         inputKode.addEventListener('input', function() {
             inputId.value = 'IDM-' + this.value.toUpperCase();
         });
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
     </script>
 </body>
 </html>
