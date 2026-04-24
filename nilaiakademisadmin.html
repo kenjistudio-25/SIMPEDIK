@@ -1037,6 +1037,10 @@
             const modal = document.getElementById('detailModal');
             if (e.target === modal) modal.classList.remove('active');
         });
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
     </script>
 </body>
 </html>
