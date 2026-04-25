@@ -259,6 +259,39 @@
             border: 1px solid #374151;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+
+        /* Custom Searchable Dropdown */
+        .searchable-dropdown { position: relative; }
+        .dropdown-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 2100;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .dropdown-options.show { display: block; }
+        .dropdown-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 0.9rem;
+            color: #333;
+            text-align: left;
+        }
+        .dropdown-option:hover { background-color: #f3f4f6; color: var(--primary-color); }
+        .no-results { padding: 10px; color: #888; font-size: 0.9rem; text-align: center; }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -465,7 +498,7 @@
                     </div>
                     <span>Sanksi Piket Siswa</span>
                 </a>
-                <a href="kehadirangurumapel.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                <a href="#" id="kehadiranMapelBtn" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
                     <div class="icon-box" style="background-color: #9333ea; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
                         <i class="fas fa-user-alt"></i>
                     </div>
@@ -476,14 +509,117 @@
         </div>
     </div>
 
+    <!-- Modal Notifikasi Kehadiran Guru Mapel -->
+    <div id="guruMapelNotifModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle" style="font-size: 4rem; color: #dc2626;"></i>
+            </div>
+            <h3 style="color: #333; margin-bottom: 15px;">Laporan Ketidak Hadiran Guru Mata Pelajaran</h3>
+            <p style="color: #555; margin-bottom: 25px; line-height: 1.6; text-align: justify;">
+                Form ini digunakan untuk mengisi data guru mapel yang berhalangan hadir atau tidak berada di kelas saat mata pelajarannya berlangsung. Pastikan data yang anda laporkan valid dan dapat di pertanggung jawabkan. Laporan yang anda kirim tidak dapat di update atau di hapus dan akan langsung terkirim ke akun kepala sekolah. 
+            </p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('guruMapelNotifModal').classList.remove('active')" style="flex: 1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #4b5563;">Batal</button>
+                <button onclick="openLaporGuruModal()" style="flex: 1; padding: 12px; background: #3b82f6; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white;">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Lapor Guru Mapel -->
+    <div id="laporGuruModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; text-align: left;">
+            <div class="modal-header" style="border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #333; margin: 0;"><i class="fas fa-bullhorn" style="color: #dc2626; margin-right: 10px;"></i> Lapor..!</h3>
+                <span class="close-modal" onclick="document.getElementById('laporGuruModal').classList.remove('active')" style="cursor: pointer; font-size: 1.5rem; color: #888;">&times;</span>
+            </div>
+            <form id="laporGuruForm">
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Id Laporan</label>
+                    <input type="text" id="laporId" readonly style="width: 100%; padding: 10px; background-color: #f3f4f6; border: 1px solid #ddd; border-radius: 6px; cursor: not-allowed; color: #666;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Nama Guru</label>
+                    <div class="searchable-dropdown">
+                        <input type="text" id="laporNamaGuru" required placeholder="Cari Nama Guru Mapel..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" autocomplete="off">
+                        <div id="guruMapelDropdown" class="dropdown-options"></div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Mata Pelajaran</label>
+                        <div class="searchable-dropdown">
+                            <input type="text" id="laporMapel" required placeholder="Cari Mata Pelajaran..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" autocomplete="off">
+                            <div id="mapelDropdown" class="dropdown-options"></div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Kelas yang diajar</label>
+                        <input type="text" id="laporKelas" required placeholder="Contoh: X TKJ 1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Tanggal</label>
+                        <input type="date" id="laporTanggal" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Waktu</label>
+                        <input type="time" id="laporWaktu" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Keterangan Tidak Hadir</label>
+                    <select id="laporKeterangan" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background-color: white;">
+                        <option value="">-- Pilih Keterangan --</option>
+                        <option value="Tugas Kedinasan">Tugas Kedinasan</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Cuti">Cuti</option>
+                        <option value="Ijin Kepala Sekolah">Ijin Kepala Sekolah</option>
+                        <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Keterangan Tugas</label>
+                    <textarea id="laporTugas" placeholder="Detail tugas yang ditinggalkan..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 80px; font-family: inherit;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem;">Guru Yang Melapor</label>
+                    <input type="text" id="laporPelapor" readonly style="width: 100%; padding: 10px; background-color: #f3f4f6; border: 1px solid #ddd; border-radius: 6px; cursor: not-allowed; color: #666;">
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 10px;">
+                    <button type="button" onclick="document.getElementById('laporGuruModal').classList.remove('active')" style="flex: 1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #4b5563;">Batal</button>
+                    <button type="submit" style="flex: 1; padding: 12px; background: #dc2626; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white;">Kirim Laporan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Sukses Lapor -->
+    <div id="successLaporModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px 20px; border-top: 5px solid #10b981;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-check-circle" style="font-size: 5rem; color: #10b981; animation: scaleUp 0.4s ease-out;"></i>
+            </div>
+            <h3 style="color: #333; margin-bottom: 10px; font-size: 1.5rem; font-weight: 700;">Berhasil Terkirim!</h3>
+            <p style="color: #666; margin-bottom: 30px; font-size: 1.1rem; line-height: 1.5;">Laporan anda telah dikirim ke kepala sekolah</p>
+            <button onclick="document.getElementById('successLaporModal').classList.remove('active')" style="width: 100%; padding: 12px; font-size: 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">Tutup</button>
+        </div>
+    </div>
+
     <script>
         // --- Koneksi Navbar ---
         const supabaseUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
         
         let supabaseClient;
+        const absensiUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const absensiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
+        let absensiClient;
+
         if (typeof supabase !== 'undefined') {
             supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+            absensiClient = supabase.createClient(absensiUrl, absensiKey);
 
             async function loadSchoolIdentity() {
                 try {
@@ -767,11 +903,217 @@
         // --- Logika Modal Pilih Tugas ---
         const piketMenuBtn = document.getElementById('piketMenuBtn');
         const pilihTugasModal = document.getElementById('pilihTugasModal');
+        const kehadiranMapelBtn = document.getElementById('kehadiranMapelBtn');
+        const guruMapelNotifModal = document.getElementById('guruMapelNotifModal');
 
         if (piketMenuBtn) {
             piketMenuBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 pilihTugasModal.classList.add('active');
+            });
+        }
+
+        // Munculkan notifikasi sebelum ke halaman Kehadiran Guru Mapel
+        if (kehadiranMapelBtn) {
+            kehadiranMapelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                pilihTugasModal.classList.remove('active');
+                guruMapelNotifModal.classList.add('active');
+            });
+        }
+
+        // --- Logika Modal Lapor Guru Mapel ---
+        let guruMapelCache = [];
+        let mapelCache = [];
+
+        async function loadGuruMapelOptions() {
+            try {
+                const { data, error } = await absensiClient
+                    .from('matapelajaran')
+                    .select('nama_guru')
+                    .not('nama_guru', 'is', null);
+                
+                if (error) throw error;
+                
+                // Ambil daftar unik nama guru dari tabel matapelajaran
+                const names = data.map(item => item.nama_guru);
+                guruMapelCache = [...new Set(names)].sort();
+            } catch (err) {
+                console.error("Gagal memuat daftar guru mapel:", err);
+            }
+        }
+
+        async function loadMapelOptions() {
+            try {
+                const { data, error } = await absensiClient
+                    .from('matapelajaran')
+                    .select('nama_mapel')
+                    .not('nama_mapel', 'is', null);
+                
+                if (error) throw error;
+                
+                // Ambil daftar unik nama mata pelajaran
+                const names = data.map(item => item.nama_mapel);
+                mapelCache = [...new Set(names)].sort();
+            } catch (err) {
+                console.error("Gagal memuat daftar mata pelajaran:", err);
+            }
+        }
+
+        function openLaporGuruModal() {
+            document.getElementById('guruMapelNotifModal').classList.remove('active');
+            
+            const laporModal = document.getElementById('laporGuruModal');
+            const laporPelapor = document.getElementById('laporPelapor');
+
+            // Muat data dari tabel matapelajaran untuk cache
+            loadGuruMapelOptions();
+            loadMapelOptions();
+            
+            // Ambil data guru yang sedang login dari sessionStorage
+            const session = JSON.parse(sessionStorage.getItem('guru_session'));
+            if (session && session.nama) {
+                laporPelapor.value = session.nama;
+            }
+            
+            // Set tanggal & waktu default (hari ini)
+            const now = new Date();
+            document.getElementById('laporTanggal').value = now.toISOString().split('T')[0];
+            document.getElementById('laporWaktu').value = now.toTimeString().slice(0, 5);
+            
+            // Generate Id Laporan: GTH- + 6 angka random - tanggalbulanahun (DDMMYY)
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            const random6 = Math.floor(100000 + Math.random() * 900000);
+            const generatedId = `GTH-${random6}-${dd}${mm}${yy}`;
+            document.getElementById('laporId').value = generatedId;
+
+            laporModal.classList.add('active');
+        }
+
+        const laporNamaInput = document.getElementById('laporNamaGuru');
+        const laporDropdown = document.getElementById('guruMapelDropdown');
+        const laporMapelInput = document.getElementById('laporMapel');
+        const mapelDropdown = document.getElementById('mapelDropdown');
+
+        if (laporNamaInput) {
+            laporNamaInput.addEventListener('input', function() {
+                const val = this.value.toLowerCase();
+                const filtered = guruMapelCache.filter(name => name.toLowerCase().includes(val));
+                renderGuruDropdown(filtered);
+            });
+
+            laporNamaInput.addEventListener('focus', function() {
+                const val = this.value.toLowerCase();
+                const filtered = val ? guruMapelCache.filter(name => name.toLowerCase().includes(val)) : guruMapelCache;
+                renderGuruDropdown(filtered);
+            });
+        }
+
+        if (laporMapelInput) {
+            laporMapelInput.addEventListener('input', function() {
+                const val = this.value.toLowerCase();
+                const filtered = mapelCache.filter(name => name.toLowerCase().includes(val));
+                renderMapelDropdown(filtered);
+            });
+
+            laporMapelInput.addEventListener('focus', function() {
+                const val = this.value.toLowerCase();
+                const filtered = val ? mapelCache.filter(name => name.toLowerCase().includes(val)) : mapelCache;
+                renderMapelDropdown(filtered);
+            });
+        }
+
+        function renderGuruDropdown(data) {
+            laporDropdown.innerHTML = '';
+            if (data.length === 0) {
+                laporDropdown.innerHTML = '<div class="no-results">Tidak ditemukan</div>';
+            } else {
+                data.forEach(name => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-option';
+                    div.textContent = name;
+                    div.onclick = () => {
+                        laporNamaInput.value = name;
+                        laporDropdown.classList.remove('show');
+                    };
+                    laporDropdown.appendChild(div);
+                });
+            }
+            laporDropdown.classList.add('show');
+        }
+
+        function renderMapelDropdown(data) {
+            mapelDropdown.innerHTML = '';
+            if (data.length === 0) {
+                mapelDropdown.innerHTML = '<div class="no-results">Tidak ditemukan</div>';
+            } else {
+                data.forEach(name => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-option';
+                    div.textContent = name;
+                    div.onclick = () => {
+                        laporMapelInput.value = name;
+                        mapelDropdown.classList.remove('show');
+                    };
+                    mapelDropdown.appendChild(div);
+                });
+            }
+            mapelDropdown.classList.add('show');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (laporNamaInput && !laporNamaInput.contains(e.target) && !laporDropdown.contains(e.target)) {
+                laporDropdown.classList.remove('show');
+            }
+            if (laporMapelInput && !laporMapelInput.contains(e.target) && !mapelDropdown.contains(e.target)) {
+                mapelDropdown.classList.remove('show');
+            }
+        });
+
+        // --- Simpan Laporan Guru ke Supabase ---
+        const laporGuruForm = document.getElementById('laporGuruForm');
+        if (laporGuruForm) {
+            laporGuruForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const submitBtn = laporGuruForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Mengirim Laporan...';
+                submitBtn.disabled = true;
+
+                const formData = {
+                    id: document.getElementById('laporId').value,
+                    nama_guru: document.getElementById('laporNamaGuru').value,
+                    mapel: document.getElementById('laporMapel').value,
+                    kelas: document.getElementById('laporKelas').value,
+                    tanggal: document.getElementById('laporTanggal').value,
+                    waktu: document.getElementById('laporWaktu').value,
+                    keterangan: document.getElementById('laporKeterangan').value,
+                    keterangan_tugas: document.getElementById('laporTugas').value,
+                    guru_yang_melapor: document.getElementById('laporPelapor').value
+                };
+
+                try {
+                    const { error } = await absensiClient
+                        .from('laporguru')
+                        .insert([formData]);
+
+                    if (error) throw error;
+
+                    document.getElementById('laporGuruModal').classList.remove('active');
+                    laporGuruForm.reset();
+                    
+                    // Tampilkan modal sukses yang menarik
+                    document.getElementById('successLaporModal').classList.add('active');
+                } catch (err) {
+                    console.error('Gagal mengirim laporan:', err);
+                    alert('Gagal mengirim laporan: ' + err.message);
+                } finally {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
             });
         }
 
