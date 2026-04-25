@@ -326,24 +326,6 @@
         <!-- Wadah Menu Grid -->
         <div class="dashboard-card card-dark">
             <div class="menu-grid">
-                <a href="piketharin.html" class="menu-card" id="piketLink">
-                    <div class="icon-box" style="background-color: #3b82f6;">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <span>Piket Umum</span>
-                </a>
-                <a href="absensisiswa.html" class="menu-card">
-                    <div class="icon-box" style="background-color: #10b981;">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <span>Absensi Kehadiran</span>
-                </a>
-                <a href="dispensasiguru.html" class="menu-card">
-                    <div class="icon-box" style="background-color: #14b8a6;">
-                        <i class="fas fa-file-signature"></i>
-                    </div>
-                    <span>Dispensasi Siswa</span>
-                </a>
                 <a href="#" class="menu-card" id="walikelasLink">
                     <div class="icon-box" style="background-color: #f59e0b;">
                         <i class="fas fa-chalkboard-teacher"></i>
@@ -373,6 +355,12 @@
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <span>Kasus Pembelajaran</span>
+                </a>
+                <a href="#" class="menu-card" id="piketMenuBtn">
+                    <div class="icon-box" style="background-color: #ec4899;">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <span>Guru Piket</span>
                 </a>
             </div>
         </div>
@@ -441,6 +429,50 @@
             <h3 style="color: #333; margin-bottom: 10px;">Akses Ditolak</h3>
             <p style="color: #666; margin-bottom: 25px;">Maaf, anda tidak memiliki tugas tambahan sebagai walikelas...!</p>
             <button onclick="document.getElementById('walikelasWarningModal').classList.remove('active')" style="background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Modal Pilih Tugas -->
+    <div id="pilihTugasModal" class="modal">
+        <div class="modal-content">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-tasks" style="font-size: 3rem; color: #ec4899;"></i>
+            </div>
+            <h3 style="color: #333; margin-bottom: 15px;">Pilih Tugas</h3>
+            <p style="color: #666; margin-bottom: 25px;">Silakan pilih tugas piket yang ingin Anda akses.</p>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                <a href="piketharin.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                    <div class="icon-box" style="background-color: #3b82f6; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <span>Piket Umum Kebersihan</span>
+                </a>
+                <a href="absensisiswa.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                    <div class="icon-box" style="background-color: #10b981; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <span>Absensi Kehadiran</span>
+                </a>
+                <a href="dispensasiguru.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                    <div class="icon-box" style="background-color: #14b8a6; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <span>Dispensasi Siswa</span>
+                </a>
+                <a href="sanksipiket.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                    <div class="icon-box" style="background-color: #dc2626; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <span>Sanksi Piket Siswa</span>
+                </a>
+                <a href="kehadirangurumapel.html" class="menu-card" style="flex-direction: row; justify-content: flex-start; gap: 15px; padding: 15px; border-radius: 8px; height: auto;">
+                    <div class="icon-box" style="background-color: #9333ea; width: 40px; height: 40px; margin-bottom: 0; font-size: 1.2rem;">
+                        <i class="fas fa-user-alt"></i>
+                    </div>
+                    <span>Kehadiran Guru Mapel</span>
+                </a>
+            </div>
+            <button onclick="document.getElementById('pilihTugasModal').classList.remove('active')" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">Tutup</button>
         </div>
     </div>
 
@@ -729,6 +761,17 @@
                 } catch (err) {
                     console.error("Error validating walikelas:", err);
                 }
+            });
+        }
+
+        // --- Logika Modal Pilih Tugas ---
+        const piketMenuBtn = document.getElementById('piketMenuBtn');
+        const pilihTugasModal = document.getElementById('pilihTugasModal');
+
+        if (piketMenuBtn) {
+            piketMenuBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                pilihTugasModal.classList.add('active');
             });
         }
 
