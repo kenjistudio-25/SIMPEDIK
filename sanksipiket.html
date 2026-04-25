@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanksi Piket Siswa - SIMPEDIK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --sidebar-hover: #34495e;
+            --header-height: 60px;
+            --sidebar-width: 260px;
+            --bg-light: #f4f6f9;
+            --navbar-bg: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            height: var(--header-height);
+            background-color: var(--navbar-bg); 
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1002;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+            background-color: white; 
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white; 
+        }
+
+        .btn-back-dashboard {
+            margin-left: auto;
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .btn-back-dashboard:hover {
+            background-color: white;
+            color: var(--navbar-bg);
+        }
+
+        .main-content {
+            margin-top: var(--header-height);
+            margin-left: 0;
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .table-responsive { overflow-x: auto; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
+        .custom-table tr:hover { background-color: #f9f9f9; }
+        
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background-color: var(--primary-color); }
+        .btn-danger { background-color: #ef4444; }
+        .btn-warning { background-color: #f59e0b; }
+        .btn-secondary { background-color: #e2e8f0; color: #475569; }
+
+        .card-blue {
+            background: #1e40af;
+            color: white;
+            border: 1px solid #000000;
+        }
+        .card-blue .custom-table th { background-color: #172554; color: #e0e7ff; border-bottom: 1px solid #3b82f6; }
+        .card-blue .custom-table td { border-bottom: 1px solid #1e3a8a; }
+        .card-blue .custom-table tr:hover { background-color: #1e3a8a; }
+
+        .card-green {
+            background: #78e4c0;
+            color: rgb(20, 20, 20);
+            border: 1px solid #000805;
+        }
+        .card-green .custom-table th { background-color: #064e3b; color: #ecd68e; border-bottom: 1px solid #34d399; }
+        .card-green .custom-table td { border-bottom: 1px solid #059669; }
+        .card-green .custom-table tr:hover { background-color: #059669; color: #ffffff; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-header h3 { margin: 0; color: #333; font-size: 1.2rem; }
+        .close-modal { font-size: 1.5rem; cursor: pointer; color: #888; transition: color 0.2s; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #666; font-size: 0.9rem; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+
+        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+
+        .searchable-dropdown { position: relative; }
+        .dropdown-options {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: white; border: 1px solid #ddd;
+            border-radius: 0 0 6px 6px; max-height: 200px;
+            overflow-y: auto; z-index: 10; display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .dropdown-options.show { display: block; }
+        .dropdown-option { padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f1f1; font-size: 0.95rem; color: #333; }
+        .dropdown-option:hover { background-color: #f3f4f6; color: var(--primary-color); }
+
+        .main-footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.85rem;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand span { font-size: 1rem; }
+            .mobile-vertical-btn { flex-direction: column; width: 100%; }
+            .mobile-vertical-btn .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">
+            <img src="" alt="Logo Sekolah" style="display: none;">
+            <span>SIMPEDIK</span>
+        </a>
+        <a href="adminguru.html" class="btn-back-dashboard">Kembali Ke Dashboard</a>
+    </nav>
+
+    <main class="main-content">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <div style="background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #555; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                <i class="far fa-clock" style="color: var(--navbar-bg);"></i>
+                <span id="liveDateTime"></span>
+            </div>
+        </div>
+
+        <!-- Bagian Petugas Piket Hari Ini (Hanya Informasi) -->
+        <div class="dashboard-card" style="background: #1f2937; color: white; border: 1px solid #374151;">
+            <div style="border-bottom: 1px solid #374151; padding-bottom: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: white; margin: 0;">Petugas Piket Bertugas Hari Ini</h2>
+                <span id="todayBadge" style="background: var(--navbar-bg); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;"></span>
+            </div>
+            <div id="piketList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <p style="grid-column: 1/-1; text-align: center; color: #cbd5e1;">Memuat data petugas...</p>
+            </div>
+        </div>
+        
+        <!-- Jurnal/Riwayat Sanksi -->
+        <div class="dashboard-card card-green">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <h2 style="color: white; margin: 0;">Jurnal Pemberian Sanksi</h2>
+                    <input type="text" id="searchSanksiInput" placeholder="Cari Riwayat..." style="padding: 8px 10px; border-radius: 6px; border: 1px solid #ddd;">
+                </div>
+                <div class="mobile-vertical-btn" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" id="inputSanksiBtn"><i class="fas fa-plus"></i> Input Sanksi Baru</button>
+                    <button class="btn btn-danger" id="exportSanksiBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID Sanksi</th>
+                            <th>Tanggal</th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>Jenis Sanksi</th>
+                            <!-- Status dihapus sesuai skema baru -->
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jurnalSanksiTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #d1fae5;">Belum ada riwayat sanksi.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="paginationSanksi" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;"></div>
+        </div>
+
+         <footer class="main-footer">
+            <p>&copy; SIMPPEDIK (Sistem Informasi Manajemen Perkembangan Pembelajaran Peserta Didik).2026</p>
+            <p>CopyRight Kenji Studio Developer.</p>
+        </footer>
+    </main>
+
+    <!-- Modal Input Sanksi -->
+    <div id="sanksiModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Input Sanksi Piket Baru</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="sanksiForm">
+                <div class="form-group">
+                    <label>ID Sanksi</label>
+                    <input type="text" id="idSanksi" readonly placeholder="Otomatis">
+                </div>
+                <div class="form-group">
+                    <label>Nama Siswa</label>
+                    <div class="searchable-dropdown">
+                        <input type="text" id="namaSiswaSearch" placeholder="Cari nama siswa..." required autocomplete="off">
+                        <input type="hidden" id="namaSiswaHidden">
+                        <div id="siswaDropdown" class="dropdown-options"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>NISN</label>
+                    <input type="text" id="nisnSiswa" readonly placeholder="Otomatis">
+                </div>
+                <div class="form-group">
+                    <label>Kelas</label>
+                    <input type="text" id="kelasSiswa" readonly placeholder="Otomatis">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Sanksi</label>
+                    <input type="date" id="tanggalSanksi" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Sanksi</label>
+                    <select id="jenisSanksi" required>
+                        <option value="">-- Pilih Sanksi --</option>
+                        <option value="Teguran Lisan">Teguran Lisan</option>
+                        <option value="Membersihkan Area Piket 2x Lipat">Membersihkan Area Piket 2x Lipat</option>
+                        <option value="Membersihkan Fasilitas Umum (WC/Halaman)">Membersihkan Fasilitas Umum (WC/Halaman)</option>
+                        <option value="Pemanggilan Orang Tua">Pemanggilan Orang Tua</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group" id="deskripsiSanksiContainer" style="display: none;">
+                    <label>Tulis Jenis Sanksi</label>
+                    <input type="text" id="deskripsiSanksi" placeholder="Masukkan jenis sanksi lainnya...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel-btn">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="submitSanksiBtn">Simpan Sanksi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
+        
+        const absensiUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const absensiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
+        
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const absensiClient = supabase.createClient(absensiUrl, absensiKey);
+
+        let schoolData = {};
+        let currentPiketTeachers = [];
+        let siswaDataCache = [];
+        let currentJurnalSanksi = [];
+        let isEditMode = false;
+
+        // --- Identitas Sekolah & Waktu ---
+        async function loadSchoolIdentity() {
+            try {
+                const { data } = await supabaseClient.from('identitassekolah').select('nama_sekolah, logo, kop_sekolah').limit(1).single();
+                if (data) {
+                    schoolData = data;
+                    document.querySelector('.navbar-brand span').textContent = data.nama_sekolah || "SIMPEDIK";
+                    if (data.logo) {
+                        const img = document.querySelector('.navbar-brand img');
+                        img.src = data.logo;
+                        img.style.display = 'block';
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function updateLiveTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            document.getElementById('liveDateTime').textContent = `${now.toLocaleDateString('id-ID', dateOptions)} | ${now.toLocaleTimeString('id-ID', timeOptions).replace(/\./g, ':')} WIB`;
+        }
+
+        // --- Load Petugas Piket Hari Ini ---
+        async function loadPiketHariIni() {
+            const now = new Date();
+            const hariIni = now.toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
+            
+            const badge = document.getElementById('todayBadge');
+            if(badge) badge.textContent = hariIni;
+
+            const session = JSON.parse(sessionStorage.getItem('guru_session'));
+            const namaGuru = session ? session.nama : null;
+
+            if (!namaGuru) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const container = document.getElementById('piketList');
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('gurupiket')
+                    .select('piket1, piket2, piket3, piket4, piket5, piket6, piket7')
+                    .eq('hari', hariIni);
+
+                if (error) throw error;
+
+                container.innerHTML = '';
+                currentPiketTeachers = [];
+
+                let isScheduled = false;
+                if (data && data.length > 0) {
+                    isScheduled = data.some(piket => 
+                        piket.piket1 === namaGuru || 
+                        piket.piket2 === namaGuru || 
+                        piket.piket3 === namaGuru ||
+                        piket.piket4 === namaGuru ||
+                        piket.piket5 === namaGuru ||
+                        piket.piket6 === namaGuru ||
+                        piket.piket7 === namaGuru
+                    );
+                }
+
+                if (!data || data.length === 0 || !isScheduled) {
+                    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #cbd5e1; background: #111827; border-radius: 8px;">
+                        <div style="background: rgba(185, 28, 28, 0.2); color: #fca5a5; padding: 20px; border-radius: 8px; border: 1px solid #7f1d1d; display: inline-block; margin-top: 20px;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <h3 style="margin: 0 0 5px 0;">Akses Dibatasi</h3>
+                            <p style="margin: 0;">Maaf, Jadwal Piket anda bukan hari ini.</p>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <a href="adminguru.html" class="btn" style="background: #6b7280; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Kembali ke Dashboard</a>
+                        </div>
+                    </div>`;
+
+                    const inputSanksiBtn = document.getElementById('inputSanksiBtn');
+                    if (inputSanksiBtn) {
+                        inputSanksiBtn.disabled = true;
+                        inputSanksiBtn.style.opacity = '0.5';
+                        inputSanksiBtn.style.cursor = 'not-allowed';
+                        inputSanksiBtn.title = 'Akses dibatasi karena bukan jadwal piket Anda.';
+                    }
+                    return;
+                }
+
+                const teacherNames = [];
+                data.forEach(p => {
+                    if (p.piket1) teacherNames.push(p.piket1);
+                    if (p.piket2) teacherNames.push(p.piket2);
+                    if (p.piket3) teacherNames.push(p.piket3);
+                    if (p.piket4) teacherNames.push(p.piket4);
+                    if (p.piket5) teacherNames.push(p.piket5);
+                    if (p.piket6) teacherNames.push(p.piket6);
+                    if (p.piket7) teacherNames.push(p.piket7);
+                });
+
+                let photoMap = {};
+                let nipMap = {};
+                if (teacherNames.length > 0) {
+                    const { data: guruData } = await supabaseClient
+                        .from('dataguru')
+                        .select('nama_guru, photo, nip')
+                        .in('nama_guru', teacherNames);
+                    
+                    if (guruData) {
+                        guruData.forEach(g => {
+                            if (g.photo) photoMap[g.nama_guru] = g.photo;
+                            if (g.nip) nipMap[g.nama_guru] = g.nip;
+                        });
+                    }
+                }
+
+                data.forEach((piket) => {
+                    if (piket.piket1) currentPiketTeachers.push({ name: piket.piket1, nip: nipMap[piket.piket1] });
+                    if (piket.piket2) currentPiketTeachers.push({ name: piket.piket2, nip: nipMap[piket.piket2] });
+                    if (piket.piket3) currentPiketTeachers.push({ name: piket.piket3, nip: nipMap[piket.piket3] });
+                    if (piket.piket4) currentPiketTeachers.push({ name: piket.piket4, nip: nipMap[piket.piket4] });
+                    if (piket.piket5) currentPiketTeachers.push({ name: piket.piket5, nip: nipMap[piket.piket5] });
+                    if (piket.piket6) currentPiketTeachers.push({ name: piket.piket6, nip: nipMap[piket.piket6] });
+                    if (piket.piket7) currentPiketTeachers.push({ name: piket.piket7, nip: nipMap[piket.piket7] });
+
+                    const createGuruCard = (nama, label, iconClass, colorClass) => {
+                        if (!nama) return '';
+                        const photoUrl = photoMap[nama];
+                        const avatarContent = photoUrl 
+                            ? `<img src="${photoUrl}" alt="${nama}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                            : `<i class="${iconClass}"></i>`;
+
+                        return `
+                            <div style="background: #111827; padding: 15px; border-radius: 8px; border-left: 4px solid ${colorClass}; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                                <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${label}</div>
+                                <div style="font-weight: 600; color: #f3f4f6; display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 40px; height: 40px; background: #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${colorClass}; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid ${colorClass}; flex-shrink: 0;">
+                                        ${avatarContent}
+                                    </div>
+                                    <span>${nama}</span>
+                                </div>
+                            </div>
+                        `;
+                    };
+
+                    container.innerHTML += createGuruCard(piket.piket1, 'Guru Piket 1', 'fas fa-user-tie', '#3b82f6');
+                    container.innerHTML += createGuruCard(piket.piket2, 'Guru Piket 2', 'fas fa-user', '#10b981');
+                    container.innerHTML += createGuruCard(piket.piket3, 'Guru Piket 3', 'fas fa-user', '#f59e0b');
+                    container.innerHTML += createGuruCard(piket.piket4, 'Guru Piket 4', 'fas fa-user', '#8b5cf6');
+                    container.innerHTML += createGuruCard(piket.piket5, 'Guru Piket 5', 'fas fa-user', '#ef4444');
+                    container.innerHTML += createGuruCard(piket.piket6, 'Guru Piket 6', 'fas fa-user', '#6366f1');
+                    container.innerHTML += createGuruCard(piket.piket7, 'Guru Piket 7', 'fas fa-user', '#ec4899');
+                });
+
+            } catch (err) {
+                console.error('Error loading piket:', err);
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Gagal memuat data: ${err.message}</p>`;
+            }
+        }
+
+        // --- Sanksi Logic ---
+        async function loadSiswaMapping() {
+            try {
+                const { data } = await absensiClient.from('mappingsiswa').select('nama_siswa, nisn, kelas');
+                siswaDataCache = data || [];
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadJurnalSanksi() {
+            const tbody = document.getElementById('jurnalSanksiTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>';
+            
+            try {
+                // Menggunakan tabel 'sanksipiket' (pastikan tabel ini ada di Supabase atau sesuaikan namanya)
+                const { data, error } = await absensiClient.from('sanksipiket').select('*').order('tanggal', { ascending: false });
+                if (error) throw error;
+
+                currentJurnalSanksi = data || [];
+                renderJurnalSanksi();
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#fca5a5;">Gagal memuat: ' + err.message + '</td></tr>';
+            }
+        }
+
+        function renderJurnalSanksi() {
+            const tbody = document.getElementById('jurnalSanksiTableBody');
+            const search = document.getElementById('searchSanksiInput').value.toLowerCase();
+            
+            const filtered = currentJurnalSanksi.filter(item => 
+                item.nama_siswa.toLowerCase().includes(search) || 
+                item.jenis.toLowerCase().includes(search)
+            );
+
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Data tidak ditemukan.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.id}</td>
+                        <td>${item.tanggal}</td>
+                        <td>${item.nama_siswa}</td>
+                        <td>${item.kelas}</td>
+                        <td>${item.jenis}</td>
+                        <td>
+                            <button onclick="openEditSanksi('${item.id}')" class="btn btn-warning" style="padding:4px 8px;"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteSanksi('${item.id}')" class="btn btn-danger" style="padding:4px 8px;"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Event Listeners & Modals ---
+        const sanksiModal = document.getElementById('sanksiModal');
+        const inputSanksiBtn = document.getElementById('inputSanksiBtn');
+
+        inputSanksiBtn.addEventListener('click', () => {
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = 'Input Sanksi Piket Baru';
+            document.getElementById('submitSanksiBtn').textContent = 'Simpan Sanksi';
+            document.getElementById('sanksiForm').reset();
+            document.getElementById('deskripsiSanksiContainer').style.display = 'none';
+            document.getElementById('deskripsiSanksi').required = false;
+            const now = new Date();
+            const dateCode = now.toISOString().slice(0,10).replace(/-/g, '');
+            document.getElementById('tanggalSanksi').valueAsDate = now;
+            document.getElementById('idSanksi').value = `SNK-${dateCode}-${Math.floor(100+Math.random()*900)}`;
+            sanksiModal.classList.add('active');
+        });
+
+        document.querySelector('.close-modal').addEventListener('click', () => sanksiModal.classList.remove('active'));
+        document.querySelector('.cancel-btn').addEventListener('click', () => sanksiModal.classList.remove('active'));
+
+        // Search Dropdown Siswa
+        const jenisSanksiSelect = document.getElementById('jenisSanksi');
+        const deskripsiContainer = document.getElementById('deskripsiSanksiContainer');
+        const deskripsiInput = document.getElementById('deskripsiSanksi');
+
+        jenisSanksiSelect.addEventListener('change', function() {
+            if (this.value === 'Lainnya') {
+                deskripsiContainer.style.display = 'block';
+                deskripsiInput.required = true;
+                deskripsiInput.focus();
+            } else {
+                deskripsiContainer.style.display = 'none';
+                deskripsiInput.required = false;
+                deskripsiInput.value = '';
+            }
+        });
+
+        const nameInput = document.getElementById('namaSiswaSearch');
+        const dropdown = document.getElementById('siswaDropdown');
+
+        nameInput.addEventListener('input', function() {
+            const val = this.value.toLowerCase();
+            const filtered = siswaDataCache.filter(s => s.nama_siswa.toLowerCase().includes(val));
+            
+            dropdown.innerHTML = '';
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="no-results">Tidak ditemukan</div>';
+            } else {
+                filtered.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-option';
+                    div.textContent = `${s.nama_siswa} (${s.kelas})`;
+                    div.onclick = () => {
+                        nameInput.value = s.nama_siswa;
+                        document.getElementById('namaSiswaHidden').value = s.nama_siswa;
+                        document.getElementById('nisnSiswa').value = s.nisn;
+                        document.getElementById('kelasSiswa').value = s.kelas;
+                        dropdown.classList.remove('show');
+                    };
+                    dropdown.appendChild(div);
+                });
+            }
+            dropdown.classList.add('show');
+        });
+
+        document.getElementById('sanksiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            let jenisSanksiVal = document.getElementById('jenisSanksi').value;
+            if (jenisSanksiVal === 'Lainnya') {
+                jenisSanksiVal = document.getElementById('deskripsiSanksi').value;
+            }
+
+            const payload = {
+                id: document.getElementById('idSanksi').value,
+                nama_siswa: document.getElementById('namaSiswaHidden').value,
+                nisn: document.getElementById('nisnSiswa').value,
+                kelas: document.getElementById('kelasSiswa').value,
+                jenis: jenisSanksiVal,
+                tanggal: document.getElementById('tanggalSanksi').value,
+            };
+
+            try {
+                let result;
+                if (isEditMode) {
+                    result = await absensiClient.from('sanksipiket').update(payload).eq('id', payload.id);
+                } else {
+                    result = await absensiClient.from('sanksipiket').insert([payload]);
+                }
+                const { error } = result;
+                if (error) throw error;
+                alert(isEditMode ? 'Sanksi berhasil diperbarui!' : 'Sanksi berhasil dicatat!');
+                sanksiModal.classList.remove('active');
+                loadJurnalSanksi();
+            } catch (err) {
+                alert('Gagal: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Sanksi';
+            }
+        });
+
+        window.openEditSanksi = (id) => {
+            const item = currentJurnalSanksi.find(s => s.id === id);
+            if (!item) return;
+
+            isEditMode = true;
+            document.getElementById('modalTitle').textContent = 'Edit Sanksi Piket';
+            document.getElementById('submitSanksiBtn').textContent = 'Update Sanksi';
+
+            document.getElementById('idSanksi').value = item.id;
+            document.getElementById('namaSiswaSearch').value = item.nama_siswa;
+            document.getElementById('namaSiswaHidden').value = item.nama_siswa;
+            document.getElementById('nisnSiswa').value = item.nisn;
+            document.getElementById('kelasSiswa').value = item.kelas;
+            document.getElementById('tanggalSanksi').value = item.tanggal;
+
+            const standardOptions = ["Teguran Lisan", "Membersihkan Area Piket 2x Lipat", "Membersihkan Fasilitas Umum (WC/Halaman)", "Pemanggilan Orang Tua"];
+            const jenisSanksiSelect = document.getElementById('jenisSanksi');
+            const deskripsiContainer = document.getElementById('deskripsiSanksiContainer');
+            const deskripsiInput = document.getElementById('deskripsiSanksi');
+
+            if (standardOptions.includes(item.jenis)) {
+                jenisSanksiSelect.value = item.jenis;
+                deskripsiContainer.style.display = 'none';
+                deskripsiInput.required = false;
+                deskripsiInput.value = '';
+            } else {
+                jenisSanksiSelect.value = 'Lainnya';
+                deskripsiContainer.style.display = 'block';
+                deskripsiInput.required = true;
+                deskripsiInput.value = item.jenis;
+            }
+
+            sanksiModal.classList.add('active');
+        };
+
+        window.deleteSanksi = async (id) => {
+            if (confirm('Hapus riwayat sanksi ini?')) {
+                await absensiClient.from('sanksipiket').delete().eq('id', id);
+                loadJurnalSanksi();
+            }
+        };
+
+        document.getElementById('searchSanksiInput').addEventListener('input', renderJurnalSanksi);
+
+        // --- Export PDF ---
+        document.getElementById('exportSanksiBtn').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let yPos = 20;
+
+            if (schoolData.kop_sekolah) {
+                try {
+                    const resp = await fetch(schoolData.kop_sekolah);
+                    const blob = await resp.blob();
+                    const base64 = await new Promise(r => { const reader = new FileReader(); reader.onloadend = () => r(reader.result); reader.readAsDataURL(blob); });
+                    const imgProps = doc.getImageProperties(base64);
+                    const pdfWidth = pageWidth - 20;
+                    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    doc.addImage(base64, 'PNG', 10, 10, pdfWidth, imgHeight);
+                    yPos = 10 + imgHeight + 10;
+                } catch (e) {}
+            }
+
+            doc.setFontSize(16);
+            doc.text("Laporan Sanksi Pelanggaran Piket", pageWidth / 2, yPos, { align: 'center' });
+            yPos += 10;
+
+            const tableData = currentJurnalSanksi.map((item, index) => [
+                index + 1, item.tanggal, item.nama_siswa, item.kelas, item.jenis
+            ]);
+
+            doc.autoTable({
+                head: [['No', 'Tanggal', 'Nama Siswa', 'Kelas', 'Jenis Sanksi']],
+                body: tableData,
+                startY: yPos,
+                theme: 'grid',
+                headStyles: { fillColor: [220, 38, 38] }
+            });
+
+            doc.save('Laporan_Sanksi_Piket.pdf');
+        });
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSchoolIdentity();
+            setInterval(updateLiveTime, 1000);
+            updateLiveTime();
+            loadPiketHariIni();
+            loadSiswaMapping();
+            loadJurnalSanksi();
+        });
+
+        // Prevent Context Menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
