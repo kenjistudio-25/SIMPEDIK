@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Layanan BK - SIMPEDIK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    <!-- Library chart & export -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --sidebar-hover: #34495e;
+            --header-height: 60px;
+            --sidebar-width: 260px;
+            --bg-light: #f4f6f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* Navbar */
+        .navbar { height: var(--header-height); background-color: #fff; display: flex; align-items: center; padding: 0 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 1002; position: fixed; top: 0; left: 0; right: 0; }
+        .menu-toggle { font-size: 1.5rem; cursor: pointer; color: #333; margin-right: 1rem; background: none; border: none; }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #333; }
+        .navbar-brand img { height: 40px; width: auto; }
+        .navbar-brand span { font-weight: 700; font-size: 1.1rem; color: var(--secondary-color); }
+
+        /* Sidebar */
+        .sidebar { position: fixed; top: var(--header-height); left: 0; bottom: 0; width: var(--sidebar-width); background-color: var(--sidebar-bg); color: var(--sidebar-text); overflow-y: auto; transition: transform 0.3s ease; z-index: 1001; display: flex; flex-direction: column; transform: translateX(-100%); }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar-menu { flex: 1; padding-top: 1rem; list-style: none; }
+        .menu-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu-link { display: flex; align-items: center; padding: 15px 20px; color: var(--sidebar-text); text-decoration: none; transition: background 0.2s; justify-content: space-between; }
+        .menu-link:hover, .menu-link.active { background-color: var(--sidebar-hover); border-left: 4px solid var(--primary-color); }
+        .menu-content { display: flex; align-items: center; gap: 10px; }
+        .menu-icon { width: 20px; text-align: center; }
+        .dropdown-icon { font-size: 0.8rem; transition: transform 0.3s; }
+        .submenu { list-style: none; background-color: rgba(0,0,0,0.2); max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .submenu.open { max-height: 600px; }
+        .submenu-link { display: block; padding: 10px 20px 10px 50px; color: #bdc3c7; text-decoration: none; font-size: 0.9rem; }
+        .submenu-link:hover, .submenu-link.active { color: #fff; background-color: rgba(255,255,255,0.05); }
+        .submenu-link.active { color: var(--primary-color); font-weight: 600; }
+        .sidebar-footer { padding: 20px; background-color: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .admin-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-color); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 1.2rem; }
+        .admin-info { flex: 1; overflow: hidden; }
+        .admin-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .btn-logout { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 1.1rem; }
+
+        /* Main */
+        .main-content { margin-top: var(--header-height); padding: 2rem; flex: 1; overflow-y: auto; transition: margin-left 0.3s ease; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid transparent; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .card-header h2, .card-header h3 { font-size: 1.2rem; color: #333; }
+        .filter-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; align-items: center; }
+        .form-control { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; width: 100%; }
+        .btn-primary { background-color: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        /* Table */
+        .table-responsive { overflow-x: auto; }
+        .custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; white-space: nowrap; }
+        .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #f1f1f1; }
+        .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: white; }
+        .bg-success { background-color: #10b981; }
+        .bg-warning { background-color: #f59e0b; }
+        .bg-info { background-color: #3b82f6; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-left: 5px solid #ccc; }
+        .stat-card.total { border-left-color: #6366f1; }
+        .stat-card.dasar { border-left-color: #10b981; }
+        .stat-card.responsif { border-left-color: #f59e0b; }
+        .stat-card.karir { border-left-color: #3b82f6; }
+        .stat-info h3 { font-size: 1.8rem; margin: 0; color: #333; }
+        .stat-info p { color: #666; font-size: 0.9rem; font-weight: 600; }
+        .stat-icon { font-size: 2.5rem; opacity: 0.3; }
+
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .card-dark { background: #1f2937; color: #f3f4f6; border: 1px solid #374151; }
+        .card-dark .card-header { border-bottom-color: #374151; }
+        .card-dark .card-header h3 { color: #f3f4f6; }
+        .card-dark .custom-table th { background-color: #111827; color: #9ca3af; }
+        .card-dark .custom-table td { border-bottom-color: #374151; color: #e5e7eb; }
+        
+        .pagination-btn { padding: 6px 12px; margin: 0 2px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; }
+        .pagination-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; backdrop-filter: blur(4px); }
+        .overlay.active { display: block; }
+
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 100%; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <a href="dasboradmin.html" class="navbar-brand"><img src="" alt="" style="display: none;"><span>SIMPEDIK</span></a>
+    </nav>
+
+    <aside class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="dasboradmin.html" class="menu-link"><div class="menu-content"><i class="fas fa-home menu-icon"></i><span>Dashboard</span></div></a></li>
+            <li class="menu-item">
+                <a href="#" class="menu-link dropdown-toggle"><div class="menu-content"><i class="fas fa-cogs menu-icon"></i><span>Pengaturan</span></div><i class="fas fa-chevron-right dropdown-icon"></i></a>
+                <ul class="submenu">
+                    <li><a href="identitassekolah.html" class="submenu-link">Identitas Sekolah</a></li>
+                    <li><a href="rombel.html" class="submenu-link">Rombongan Belajar</a></li>
+                    <li><a href="dataguru.html" class="submenu-link">Data Guru</a></li>
+                    <li><a href="datasiswa.html" class="submenu-link">Data Siswa</a></li>
+                    <li><a href="walikelas.html" class="submenu-link">Walikelas</a></li>
+                    <li><a href="guruwali.html" class="submenu-link">Guru Wali</a></li>
+                    <li><a href="gurupiket.html" class="submenu-link">Guru Piket</a></li>
+                    <li><a href="gurubk.html" class="submenu-link">Guru Bimbingan Konseling</a></li>
+                    <li><a href="mappingsiswa.html" class="submenu-link">Mapping Kelas Siswa</a></li>
+                    <li><a href="datamapel.html" class="submenu-link">Mata Pelajaran</a></li>
+                    <li><a href="areapiket.html" class="submenu-link">Area Piket</a></li>
+                </ul>
+            </li>
+            <li class="menu-item">
+                <a href="#" class="menu-link dropdown-toggle active"><div class="menu-content"><i class="fas fa-file-alt menu-icon"></i><span>Laporan</span></div><i class="fas fa-chevron-right dropdown-icon" style="transform: rotate(90deg);"></i></a>
+                <ul class="submenu open">
+                    <li><a href="piketharianadmin.html" class="submenu-link">Piket Harian</a></li>
+                    <li><a href="absensiadmin.html" class="submenu-link">Kehadiran Siswa</a></li>
+                    <li><a href="pembinaanwaliadmin.html" class="submenu-link">Pembinaan Guru Wali</a></li>
+                    <li><a href="nilaiakademisadmin.html" class="submenu-link">Nilai Akademis</a></li>
+                    <li><a href="kasusadmin.html" class="submenu-link">Kasus</a></li>
+                    <li><a href="gurutidakmasuk.html" class="submenu-link">Guru Tidak Mengajar</a></li>
+                    <li><a href="laporanbk.html" class="submenu-link active">Laporan Guru BK</a></li>
+                    <li><a href="daftarmbg.html" class="submenu-link">Cetak Quota MBG</a></li>
+                </ul>
+            </li>
+            <li class="menu-item"><a href="Arsipadmin.html" class="menu-link"><div class="menu-content"><i class="fas fa-archive menu-icon"></i><span>Arsip</span></div></a></li>
+            <li class="menu-item"><a href="backup.html" class="menu-link"><div class="menu-content"><i class="fas fa-history menu-icon"></i><span>Backup dan Reset</span></div></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="admin-avatar">A</div> 
+            <div class="admin-info"><div class="admin-name">Administrator</div><div style="font-size: 0.75rem; color: #bdc3c7;">Online</div></div>
+            <button class="btn-logout" title="Logout" onclick="if(confirm('Apakah Anda yakin ingin keluar?')) window.location.href = 'index.html'"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+        <div class="stats-grid">
+            <div class="stat-card total"><div class="stat-info"><h3 id="totalLayanan">0</h3><p>Total Layanan</p></div><i class="fas fa-headset stat-icon" style="color: #6366f1;"></i></div>
+            <div class="stat-card dasar"><div class="stat-info"><h3 id="totalDasar">0</h3><p>Layanan Dasar</p></div><i class="fas fa-book-reader stat-icon" style="color: #10b981;"></i></div>
+            <div class="stat-card responsif"><div class="stat-info"><h3 id="totalResponsif">0</h3><p>Responsif</p></div><i class="fas fa-comments stat-icon" style="color: #f59e0b;"></i></div>
+            <div class="stat-card karir"><div class="stat-info"><h3 id="totalKarir">0</h3><p>Individu/Karir</p></div><i class="fas fa-user-tie stat-icon" style="color: #3b82f6;"></i></div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-chart-bar" style="color: var(--primary-color);"></i> Statistik Layanan BK Bulanan</h3></div>
+                <div style="position: relative; height: 350px;"><canvas id="bkChart"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-user-graduate" style="color: #ef4444;"></i> Top Intensitas Layanan</h3></div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead><tr><th>No</th><th>Nama Siswa</th><th style="text-align:center;">Jml</th></tr></thead>
+                        <tbody id="topSiswaBody"><tr><td colspan="3" style="text-align:center;">Memuat...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2><i class="fas fa-history" style="color: var(--primary-color);"></i> Detail Riwayat Layanan BK</h2></div>
+            <div class="filter-container">
+                <input type="month" class="form-control" id="filterBulan">
+                <input type="text" class="form-control" id="filterSiswa" placeholder="Cari Nama/NISN...">
+                <select class="form-control" id="filterJenis">
+                    <option value="">-- Semua Jenis --</option>
+                    <option value="Layanan dasar">Layanan dasar</option>
+                    <option value="Layanan responsif">Layanan responsif</option>
+                    <option value="Layanan perencanaan individual/Karir">Layanan perencanaan individual/Karir</option>
+                </select>
+                <button class="btn-primary" id="btnExportExcel" style="background-color: #27ae60;"><i class="fas fa-file-excel"></i> Excel</button>
+                <button class="btn-primary" id="btnExportPdf" style="background-color: #ef4444;"><i class="fas fa-file-pdf"></i> PDF</button>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table" id="bkDetailTable">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>ID</th>
+                            <th>Tanggal</th>
+                            <th>Waktu</th>
+                            <th>Lokasi</th>
+                            <th>Nama Siswa</th>
+                            <th>NISN</th>
+                            <th>Kelas</th>
+                            <th>Jenis</th>
+                            <th>Permasalahan</th>
+                            <th>Rekomendasi</th>
+                            <th>Guru BK</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailTableBody"><tr><td colspan="12" style="text-align:center;">Memuat data...</td></tr></tbody>
+                </table>
+            </div>
+            <div id="pagination" style="display:flex; justify-content:center; gap:5px; margin-top:20px;"></div>
+        </div>
+
+        <footer class="main-footer">
+            <p>&copy; SIMPPEDIK.2026 | CopyRight Kenji Studio Developer.</p>
+        </footer>
+    </main>
+
+    <script>
+        const simpedikUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
+        const simpedikKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
+        const absensiUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const absensiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
+
+        const simpedikClient = supabase.createClient(simpedikUrl, simpedikKey);
+        const absensiClient = supabase.createClient(absensiUrl, absensiKey);
+
+        let globalData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const rowsPerPage = 20;
+        let schoolData = {};
+
+        async function loadAll() {
+            try {
+                // Identitas
+                const { data: identitas } = await simpedikClient.from('identitassekolah').select('*').single();
+                if (identitas) {
+                    schoolData = identitas;
+                    document.querySelector('.navbar-brand span').textContent = identitas.nama_sekolah;
+                    if (identitas.logo) { const img = document.querySelector('.navbar-brand img'); img.src = identitas.logo; img.style.display = 'block'; }
+                }
+
+                // Data BK
+                const { data, error } = await absensiClient.from('layananbk').select('*').order('tanggal', { ascending: false });
+                if (error) throw error;
+
+                globalData = data || [];
+                updateUI();
+            } catch (err) { console.error(err); }
+        }
+
+        function updateUI() {
+            // Stats
+            document.getElementById('totalLayanan').textContent = globalData.length;
+            document.getElementById('totalDasar').textContent = globalData.filter(d => d.jenis_konseling === 'Layanan dasar').length;
+            document.getElementById('totalResponsif').textContent = globalData.filter(d => d.jenis_konseling === 'Layanan responsif').length;
+            document.getElementById('totalKarir').textContent = globalData.filter(d => d.jenis_konseling === 'Layanan perencanaan individual/Karir').length;
+
+            applyFilters();
+            renderChart();
+            renderTopSiswa();
+        }
+
+        function applyFilters() {
+            const bulan = document.getElementById('filterBulan').value;
+            const siswa = document.getElementById('filterSiswa').value.toLowerCase();
+            const jenis = document.getElementById('filterJenis').value;
+
+            filteredData = globalData.filter(item => {
+                const matchBulan = !bulan || (item.tanggal && item.tanggal.startsWith(bulan));
+                const matchSiswa = !siswa || 
+                    (item.nama_siswa && item.nama_siswa.toLowerCase().includes(siswa)) || 
+                    (item.nisn && item.nisn.toLowerCase().includes(siswa));
+                const matchJenis = !jenis || item.jenis_konseling === jenis;
+                return matchBulan && matchSiswa && matchJenis;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('detailTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;">Data tidak ditemukan.</td></tr>';
+                return;
+            }
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const pageData = filteredData.slice(start, start + rowsPerPage);
+
+            pageData.forEach((item, i) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${start + i + 1}</td>
+                        <td style="font-family: monospace; font-size: 0.8rem; color: #667eea;">${item.id}</td>
+                        <td>${item.tanggal}</td>
+                        <td>${item.waktu}</td>
+                        <td>${item.lokasi}</td>
+                        <td style="font-weight:bold;">${item.nama_siswa}</td>
+                        <td>${item.nisn || '-'}</td>
+                        <td>${item.kelas}</td>
+                        <td><span class="badge ${item.jenis_konseling.includes('dasar') ? 'bg-success' : 'bg-info'}">${item.jenis_konseling}</span></td>
+                        <td title="${item.permasalahan}">${item.permasalahan ? item.permasalahan.substring(0, 30) + '...' : '-'}</td>
+                        <td title="${item.rekomendasi}">${item.rekomendasi ? item.rekomendasi.substring(0, 30) + '...' : '-'}</td>
+                        <td>${item.guru_bk}</td>
+                    </tr>
+                `;
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => { currentPage = i; renderTable(); };
+                container.appendChild(btn);
+            }
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('bkChart').getContext('2d');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const stats = Array(12).fill(null).map(() => ({ Dasar: 0, Responsif: 0, Karir: 0 }));
+
+            globalData.forEach(item => {
+                const month = new Date(item.tanggal).getMonth();
+                if (item.jenis_konseling === 'Layanan dasar') stats[month].Dasar++;
+                else if (item.jenis_konseling === 'Layanan responsif') stats[month].Responsif++;
+                else stats[month].Karir++;
+            });
+
+            if (window.myBKChart) window.myBKChart.destroy();
+            window.myBKChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'Dasar', data: stats.map(s => s.Dasar), backgroundColor: '#10b981' },
+                        { label: 'Responsif', data: stats.map(s => s.Responsif), backgroundColor: '#f59e0b' },
+                        { label: 'Karir', data: stats.map(s => s.Karir), backgroundColor: '#3b82f6' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderTopSiswa() {
+            const tbody = document.getElementById('topSiswaBody');
+            const counts = {};
+            globalData.forEach(d => counts[d.nama_siswa] = (counts[d.nama_siswa] || 0) + 1);
+            const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            tbody.innerHTML = sorted.map((s, i) => `<tr><td>${i+1}</td><td>${s[0]}</td><td style="text-align:center;"><span class="badge bg-success">${s[1]}</span></td></tr>`).join('');
+        }
+
+        // Exports
+        document.getElementById('btnExportExcel').onclick = () => {
+            const ws = XLSX.utils.json_to_sheet(filteredData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Layanan BK");
+            XLSX.writeFile(wb, `Laporan_BK_${new Date().toISOString().slice(0,10)}.xlsx`);
+        };
+
+        document.getElementById('btnExportPdf').onclick = async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            let y = 20;
+
+            if (schoolData.kop_sekolah) {
+                try {
+                    const resp = await fetch(schoolData.kop_sekolah);
+                    const blob = await resp.blob();
+                    const b64 = await new Promise(r => { const rd = new FileReader(); rd.onloadend = () => r(rd.result); rd.readAsDataURL(blob); });
+                    const imgProps = doc.getImageProperties(b64);
+                    const pdfWidth = doc.internal.pageSize.getWidth() - 20;
+                    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    doc.addImage(b64, 'PNG', 10, 10, pdfWidth, imgHeight);
+                    y = 10 + imgHeight + 10;
+                } catch (e) {}
+            }
+
+            doc.setFontSize(16);
+            doc.text("Laporan Layanan Bimbingan Konseling", doc.internal.pageSize.getWidth()/2, y, { align: 'center' });
+            
+            const head = [['No', 'Tgl', 'Waktu', 'Siswa', 'Kelas', 'Jenis', 'Permasalahan', 'Guru BK']];
+            const body = filteredData.map((d, i) => [i + 1, d.tanggal, d.waktu, d.nama_siswa, d.kelas, d.jenis_konseling, d.permasalahan, d.guru_bk]);
+
+            doc.autoTable({ head, body, startY: y + 10, theme: 'grid', styles: { fontSize: 8 } });
+            doc.save('Laporan_BK.pdf');
+        };
+
+        // Filters
+        document.getElementById('filterBulan').onchange = applyFilters;
+        document.getElementById('filterSiswa').oninput = applyFilters;
+        document.getElementById('filterJenis').onchange = applyFilters;
+
+        // Sidebar Logic
+        document.getElementById('menuToggle').onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        };
+        document.getElementById('overlay').onclick = () => {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        };
+        document.querySelectorAll('.dropdown-toggle').forEach(d => d.onclick = (e) => {
+            e.preventDefault();
+            const sub = d.nextElementSibling;
+            sub.classList.toggle('open');
+            d.querySelector('.dropdown-icon').style.transform = sub.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+        });
+
+        document.addEventListener('DOMContentLoaded', loadAll);
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
