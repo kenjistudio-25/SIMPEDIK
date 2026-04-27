@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengumuman - SIMPEDIK</title>
+    <!-- Icon Keren -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --sidebar-hover: #34495e;
+            --header-height: 60px;
+            --sidebar-width: 260px;
+            --bg-light: #f4f6f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('bg2.jpg') no-repeat center center;
+            background-size: cover;
+            filter: blur(5px);
+            transform: scale(1.05);
+            z-index: -1;
+        }
+
+        /* --- Navigasi Atas --- */
+        .navbar {
+            height: var(--header-height);
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 1002;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #333;
+            margin-right: 1rem;
+            background: none;
+            border: none;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+        }
+
+        /* --- Menu Samping --- */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding-top: 1rem;
+            list-style: none;
+        }
+
+        .menu-item {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: background 0.2s;
+            justify-content: space-between;
+        }
+
+        .menu-link:hover, .menu-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .menu-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-icon {
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+
+        /* Menu Dropdown */
+        .submenu {
+            list-style: none;
+            background-color: rgba(0,0,0,0.2);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .submenu.open {
+            max-height: 500px;
+        }
+
+        .submenu-link {
+            display: block;
+            padding: 10px 20px 10px 50px;
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .submenu-link:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        /* Profil Bawah */
+        .sidebar-footer {
+            padding: 20px;
+            background-color: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .admin-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .admin-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: #c0392b;
+        }
+
+        /* --- Konten Utama --- */
+        .main-content {
+            margin-top: var(--header-height);
+            margin-left: 0;
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.active ~ .main-content {
+            margin-left: 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-header h2 {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal-header .icon {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .modal-body {
+            background: white;
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* --- Tombol Tambah Pengumuman --- */
+        .btn-tambah {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-tambah:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        /* --- Tabel Pengumuman --- */
+        .table-responsive {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .custom-table th,
+        .custom-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .custom-table th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .custom-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* --- Overlay HP --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand span {
+                font-size: 1rem;
+            }
+            .navbar-date {
+                display: none !important;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar.active ~ .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigasi Atas -->
+    <nav class="navbar">
+        <button class="menu-toggle" id="menuToggle" title="Toggle Sidebar Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a href="#" class="navbar-brand">
+            <img src="" alt="Logo Sekolah" style="display: none;">
+            <span></span>
+        </a>
+        <div class="navbar-date" style="margin-left: auto; display: flex; align-items: center; gap: 10px; color: #555; font-weight: 600; font-size: 0.9rem;">
+            <i class="far fa-calendar-alt" style="color: var(--primary-color);"></i>
+            <span id="navbarDate"></span>
+        </div>
+    </nav>
+
+    <!-- Menu Samping -->
+    <aside class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="dasboradmin.html" class="menu-link">
+                    <div class="menu-content">
+                        <i class="fas fa-home menu-icon"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </a>
+            </li>
+
+            <!-- Menu Pengaturan -->
+            <li class="menu-item">
+                <a href="#" class="menu-link dropdown-toggle">
+                    <div class="menu-content">
+                        <i class="fas fa-cogs menu-icon"></i>
+                        <span>Pengaturan</span>
+                    </div>
+                    <i class="fas fa-chevron-right dropdown-icon"></i>
+                </a>
+                <ul class="submenu open">
+                    <li><a href="identitassekolah.html" class="submenu-link">Identitas Sekolah</a></li>
+                    <li><a href="rombel.html" class="submenu-link">Rombongan Belajar</a></li>
+                    <li><a href="dataguru.html" class="submenu-link">Data Guru</a></li>
+                    <li><a href="datasiswa.html" class="submenu-link">Data Siswa</a></li>
+                    <li><a href="walikelas.html" class="submenu-link">Walikelas</a></li>
+                    <li><a href="guruwali.html" class="submenu-link">Guru Wali</a></li>
+                    <li><a href="gurupiket.html" class="submenu-link">Guru Piket</a></li>
+                    <li><a href="gurubk.html" class="submenu-link">Guru Bimbingan Konseling</a></li>
+                    <li><a href="mappingsiswa.html" class="submenu-link">Mapping Kelas Siswa</a></li>
+                    <li><a href="datamapel.html" class="submenu-link">Mata Pelajaran</a></li>
+                    <li><a href="areapiket.html" class="submenu-link">Area Piket</a></li>
+                </ul>
+            </li>
+
+            <!-- Menu Laporan -->
+            <li class="menu-item">
+                <a href="#" class="menu-link dropdown-toggle">
+                    <div class="menu-content">
+                        <i class="fas fa-file-alt menu-icon"></i>
+                        <span>Laporan</span>
+                    </div>
+                    <i class="fas fa-chevron-right dropdown-icon"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="piketharianadmin.html" class="submenu-link">Piket Harian</a></li>
+                    <li><a href="absensiadmin.html" class="submenu-link">Kehadiran Siswa</a></li>
+                    <li><a href="pembinaanwaliadmin.html" class="submenu-link">Pembinaan Guru Wali</a></li>
+                    <li><a href="nilaiakademisadmin.html" class="submenu-link">Nilai Akademis</a></li>
+                    <li><a href="kasusadmin.html" class="submenu-link">Kasus</a></li>
+                    <li><a href="gurutidakmasuk.html" class="submenu-link">Guru Tidak Mengajar</a></li>
+                    <li><a href="laporanbk.html" class="submenu-link">Laporan Guru BK</a></li>
+                    <li><a href="daftarmbg.html" class="submenu-link">Cetak Quota MBG</a></li>
+                </ul>
+            </li>
+            
+            <li class="menu-item">
+                <a href="Arsipadmin.html" class="menu-link">
+                    <div class="menu-content">
+                        <i class="fas fa-archive menu-icon"></i>
+                        <span>Arsip</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="backup.html" class="menu-link">
+                    <div class="menu-content">
+                        <i class="fas fa-history menu-icon"></i>
+                        <span>Backup dan Reset</span>
+                    </div>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="pengumuman.html" class="menu-link active">
+                    <div class="menu-content">
+                        <i class="fas fa-bullhorn menu-icon"></i>
+                        <span>Pengumuman</span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Profil Bawah -->
+        <div class="sidebar-footer">
+            <div class="admin-avatar">A</div> 
+            <div class="admin-info">
+                <div class="admin-name">Administrator</div>
+                <div style="font-size: 0.75rem; color: #bdc3c7;">Online</div>
+            </div>
+            <button class="btn-logout" title="Logout" onclick="if(confirm('Apakah Anda yakin ingin keluar?')) window.location.href = 'index.html'">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Layar Gelap HP -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Area Konten -->
+    <main class="main-content">
+        <div class="dashboard-card">
+            <h2><i class="fas fa-bullhorn" style="color: var(--primary-color); margin-right: 10px;"></i>Pengumuman Sekolah</h2>
+            <p style="color: #666; margin-top: 10px;">Kelola pengumuman untuk sekolah. Buat pengumuman baru atau edit yang sudah ada.</p>
+            
+            <button class="btn-tambah" onclick="openModal()">
+                <i class="fas fa-plus"></i>
+                Buat Pengumuman Baru
+            </button>
+                    </div>
+
+        <!-- Tabel Pengumuman -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3><i class="fas fa-list" style="color: var(--primary-color); margin-right: 10px;"></i>Daftar Pengumuman</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Deskripsi</th>
+                            <th>Pengirim</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pengumumanTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Belum ada data pengumuman.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Edit Pengumuman -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-edit icon"></i>
+                    Edit Pengumuman
+                </h2>
+            </div>
+            <div class="modal-body">
+                <form id="pengumumanForm">
+                    <div class="form-group">
+                        <label for="idPengumuman">
+                            <i class="fas fa-hashtag"></i> ID Pengumuman
+                        </label>
+                        <input type="text" id="idPengumuman" name="idPengumuman" required placeholder="ID pengumuman" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deskripsi">
+                            <i class="fas fa-align-left"></i> Deskripsi Pengumuman
+                        </label>
+                        <textarea id="deskripsi" name="deskripsi" required placeholder="Tulis deskripsi pengumuman di sini..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pengirim">
+                            <i class="fas fa-user"></i> Pengirim Pengumuman
+                        </label>
+                        <input type="text" id="pengirim" name="pengirim" required placeholder="Nama pengirim">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                    Batal
+                </button>
+                <button type="submit" form="pengumumanForm" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Koneksi Supabase ---
+        const supabaseUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
+
+        // Global variables
+        let supabaseClient;
+
+        // Global functions
+        function editPengumuman(id, pesan, tertanda) {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('idPengumuman').value = id;
+            document.getElementById('deskripsi').value = pesan;
+            document.getElementById('pengirim').value = tertanda;
+            document.getElementById('idPengumuman').readOnly = true;
+            document.querySelector('.modal-header h2').innerHTML = '<i class="fas fa-edit icon"></i> Edit Pengumuman';
+            document.querySelector('.modal-footer button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update';
+        }
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('idPengumuman').value = generateId();
+            document.getElementById('deskripsi').value = '';
+            document.getElementById('pengirim').value = '';
+            document.getElementById('idPengumuman').readOnly = false;
+            document.querySelector('.modal-header h2').innerHTML = '<i class="fas fa-bullhorn icon"></i> Buat Pengumuman Baru';
+            document.querySelector('.modal-footer button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Simpan';
+        }
+
+        function generateId() {
+            const date = new Date();
+            const timestamp = date.getTime();
+            const random = Math.floor(Math.random() * 1000);
+            return `PGN${timestamp}${random}`;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('pengumumanForm').reset();
+        }
+
+        async function deletePengumuman(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus pengumuman ini?')) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('pengumuman')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                alert('Pengumuman berhasil dihapus!');
+                loadPengumuman(); // Ini akan otomatis menampilkan tombol Buat Pengumuman jika tabel kosong
+                
+            } catch (error) {
+                console.error('Error deleting pengumuman:', error);
+                alert('Gagal menghapus pengumuman. Silakan coba lagi.');
+            }
+        }
+
+        // Global functions
+        async function savePengumuman(e) {
+            e.preventDefault();
+            
+            const idPengumuman = document.getElementById('idPengumuman').value;
+            const deskripsi = document.getElementById('deskripsi').value;
+            const pengirim = document.getElementById('pengirim').value;
+            const isReadOnly = document.getElementById('idPengumuman').readOnly;
+            
+            try {
+                if (isReadOnly) {
+                    // Update existing
+                    const { data, error } = await supabaseClient
+                        .from('pengumuman')
+                        .update({
+                            pesan: deskripsi,
+                            tertanda: pengirim
+                        })
+                        .eq('id', idPengumuman);
+                    
+                    if (error) throw error;
+                    
+                    alert('Pengumuman berhasil diperbarui!');
+                } else {
+                    // Insert new
+                    const { data, error } = await supabaseClient
+                        .from('pengumuman')
+                        .insert([{
+                            id: idPengumuman,
+                            pesan: deskripsi,
+                            tertanda: pengirim
+                        }]);
+                    
+                    if (error) throw error;
+                    
+                    alert('Pengumuman berhasil disimpan!');
+                }
+                
+                closeModal();
+                loadPengumuman();
+                
+            } catch (error) {
+                console.error('Error saving pengumuman:', error);
+                alert('Gagal menyimpan pengumuman. Silakan coba lagi.');
+            }
+        }
+
+        // Global loadPengumuman function
+        async function loadPengumuman() {
+            if (!supabaseClient) return;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('pengumuman')
+                    .select('*');
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('pengumumanTableBody');
+                tbody.innerHTML = '';
+                
+                // Kontrol tombol Buat Pengumuman
+                const createBtn = document.querySelector('.btn-tambah');
+                
+                if (data && data.length > 0) {
+                    // Ada data: nonaktifkan tombol Buat Pengumuman
+                    createBtn.disabled = true;
+                    createBtn.style.opacity = '0.5';
+                    createBtn.style.cursor = 'not-allowed';
+                    createBtn.title = 'Tabel pengumuman sudah ada data. Hapus data yang ada terlebih dahulu.';
+                    
+                    data.forEach(pengumuman => {
+                        const row = `
+                            <tr>
+                                <td>${pengumuman.id}</td>
+                                <td>${pengumuman.pesan}</td>
+                                <td>${pengumuman.tertanda}</td>
+                                <td>-</td>
+                                <td>
+                                    <button class="btn btn-sm" style="background: #007bff; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px;" onclick="editPengumuman('${pengumuman.id}', '${pengumuman.pesan}', '${pengumuman.tertanda}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm" style="background: #dc3545; color: white; padding: 5px 10px; border-radius: 5px;" onclick="deletePengumuman('${pengumuman.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    // Tidak ada data: aktifkan tombol Buat Pengumuman
+                    createBtn.disabled = false;
+                    createBtn.style.opacity = '1';
+                    createBtn.style.cursor = 'pointer';
+                    createBtn.title = '';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data pengumuman.</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading pengumuman:', error);
+                document.getElementById('pengumumanTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+            // Load School Identity
+            async function loadSchoolIdentity() {
+                try {
+                    // Coba load dari database absensi terlebih dahulu
+                    const { data, error } = await supabaseClient
+                        .from('identitassekolah')
+                        .select('nama_sekolah, logo')
+                        .limit(1)
+                        .single();
+                    
+                    if (data) {
+                        if (data.nama_sekolah) {
+                            document.querySelector('.navbar-brand span').textContent = data.nama_sekolah;
+                        }
+                        if (data.logo) {
+                            const img = document.querySelector('.navbar-brand img');
+                            img.src = data.logo;
+                            img.style.display = 'block';
+                        }
+                    } else {
+                        // Jika tidak ada data, gunakan default
+                        document.querySelector('.navbar-brand span').textContent = 'SIMPEDIK';
+                    }
+                } catch (err) {
+                    console.error("Error loading school identity:", err);
+                    // Gunakan default jika error
+                    document.querySelector('.navbar-brand span').textContent = 'SIMPEDIK';
+                }
+            }
+
+            // Update Pengumuman
+            async function updatePengumuman(e) {
+                e.preventDefault();
+                
+                const idPengumuman = document.getElementById('idPengumuman').value;
+                const deskripsi = document.getElementById('deskripsi').value;
+                const pengirim = document.getElementById('pengirim').value;
+                
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('pengumuman')
+                        .update({
+                            pesan: deskripsi,
+                            tertanda: pengirim
+                        })
+                        .eq('id', idPengumuman);
+                    
+                    if (error) throw error;
+                    
+                    alert('Pengumuman berhasil diperbarui!');
+                    closeModal();
+                    loadPengumuman();
+                    
+                } catch (error) {
+                    console.error('Error updating pengumuman:', error);
+                    alert('Gagal memperbarui pengumuman. Silakan coba lagi.');
+                }
+            }
+
+            // Load Pengumuman
+            async function loadPengumuman() {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('pengumuman')
+                        .select('*');
+                    
+                    if (error) throw error;
+                    
+                    const tbody = document.getElementById('pengumumanTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(pengumuman => {
+                            const row = `
+                                <tr>
+                                    <td>${pengumuman.id}</td>
+                                    <td>${pengumuman.pesan}</td>
+                                    <td>${pengumuman.tertanda}</td>
+                                    <td>-</td>
+                                    <td>
+                                        <button class="btn btn-sm" style="background: #007bff; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px;" onclick="editPengumuman('${pengumuman.id}', '${pengumuman.pesan}', '${pengumuman.tertanda}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm" style="background: #dc3545; color: white; padding: 5px 10px; border-radius: 5px;" onclick="deletePengumuman('${pengumuman.id}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data pengumuman.</td></tr>';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading pengumuman:', error);
+                    document.getElementById('pengumumanTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;">Gagal memuat data.</td></tr>';
+                }
+            }
+
+            // Event Listeners
+            document.getElementById('pengumumanForm').addEventListener('submit', savePengumuman);
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                loadSchoolIdentity();
+                loadPengumuman();
+                
+                // Set current date
+                const today = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('navbarDate').textContent = today.toLocaleDateString('id-ID', options);
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('modalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // Sidebar Toggle
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('active');
+                document.getElementById('overlay').classList.toggle('active');
+            });
+
+            document.getElementById('overlay').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.remove('active');
+                this.classList.remove('active');
+            });
+        }
+
+
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+}, false);
+    </script>
+</body>
+</html>
