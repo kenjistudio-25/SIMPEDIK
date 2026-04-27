@@ -285,7 +285,7 @@
                 width: 100% !important;
                 gap: 10px !important;
             }
-            #searchRiwayatInput, #exportRiwayatPdfBtn {
+            #searchRiwayatInput, #exportRiwayatPdfBtn, #filterBulanInput {
                 width: 100% !important;
             }
             /* Symmetrize Piket Header */
@@ -373,6 +373,18 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0; color: #f3f4f6;">Riwayat Absensi Siswa</h3>
                 <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="date" id="filterTanggalInput" title="Filter Tanggal Spesifik" style="padding: 8px 12px; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.9rem; background: #374151; color: white;">
+                    <select id="filterStatusRiwayat" title="Filter Status Kehadiran" style="padding: 8px 12px; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.9rem; background: #374151; color: white;">
+                        <option value="">-- Semua Status --</option>
+                        <option value="Hadir">Hadir</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Ijin">Ijin</option>
+                        <option value="Alpa">Alpa</option>
+                    </select>
+                    <select id="filterKelasRiwayat" title="Filter Kelas" style="padding: 8px 12px; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.9rem; background: #374151; color: white;">
+                        <option value="">-- Semua Kelas --</option>
+                    </select>
+                    <input type="month" id="filterBulanInput" title="Filter Bulan" style="padding: 8px 12px; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.9rem; background: #374151; color: white;">
                     <input type="text" id="searchRiwayatInput" placeholder="Cari Absensi..." style="padding: 8px 12px; border: 1px solid #4b5563; border-radius: 6px; font-size: 0.9rem; background: #374151; color: white;">
                     <button id="exportRiwayatPdfBtn">
                         <i class="fas fa-file-pdf"></i> Export Pdf
@@ -1153,9 +1165,13 @@
             container.appendChild(createBtn('Next', currentPage + 1, false, currentPage === totalPages));
         }
 
-        // Cari Riwayat
-        document.getElementById('searchRiwayatInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
+        function filterRiwayat() {
+            const term = document.getElementById('searchRiwayatInput').value.toLowerCase();
+            const monthVal = document.getElementById('filterBulanInput').value;
+            const dateVal = document.getElementById('filterTanggalInput').value;
+            const statusVal = document.getElementById('filterStatusRiwayat').value;
+            const kelasVal = document.getElementById('filterKelasRiwayat').value;
+
             const filtered = riwayatData.filter(item => {
                 const nama = item.nama_siswa ? item.nama_siswa.toLowerCase() : '';
                 const kelas = item.kelas ? item.kelas.toLowerCase() : '';
@@ -1173,13 +1189,53 @@
                     bulanStr = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(d).toLowerCase();
                 }
 
-                return nama.includes(term) || kelas.includes(term) || status.includes(term) || 
-                       tanggalStr.includes(term) || bulanStr.includes(term) || 
-                       nisn.includes(term) || kode.includes(term);
+                const matchesSearch = nama.includes(term) || kelas.includes(term) || status.includes(term) || 
+                                     tanggalStr.includes(term) || bulanStr.includes(term) || 
+                                     nisn.includes(term) || kode.includes(term);
+                
+                const matchesMonth = !monthVal || (item.tanggal && item.tanggal.startsWith(monthVal));
+                const matchesDate = !dateVal || (item.tanggal && item.tanggal === dateVal);
+                const matchesStatus = !statusVal || (item.status_kehadiran && item.status_kehadiran === statusVal);
+                const matchesKelas = !kelasVal || (item.kelas && item.kelas === kelasVal);
+
+                return matchesSearch && matchesMonth && matchesDate && matchesStatus && matchesKelas;
             });
-            currentPage = 1; // Reset halaman
+            currentPage = 1;
             renderRiwayatTable(filtered);
-        });
+        }
+
+        document.getElementById('searchRiwayatInput').addEventListener('input', filterRiwayat);
+        document.getElementById('filterBulanInput').addEventListener('change', filterRiwayat);
+        document.getElementById('filterTanggalInput').addEventListener('change', filterRiwayat);
+        document.getElementById('filterStatusRiwayat').addEventListener('change', filterRiwayat);
+        document.getElementById('filterKelasRiwayat').addEventListener('change', filterRiwayat);
+
+        // Fungsi untuk memuat opsi kelas ke filter riwayat
+        async function loadKelasOptionsForRiwayat() {
+            const select = document.getElementById('filterKelasRiwayat');
+            if (!select) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('rombel')
+                    .select('nama_kelas')
+                    .order('nama_kelas');
+                
+                if (error) throw error;
+                
+                if (data) {
+                    data.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.nama_kelas;
+                        opt.textContent = r.nama_kelas;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error("Error loading kelas options for riwayat:", err);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadKelasOptionsForRiwayat);
 
         // Export PDF
         document.getElementById('exportRiwayatPdfBtn').addEventListener('click', async () => {
