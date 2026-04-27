@@ -13,6 +13,9 @@
     <link rel="icon" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
 
+    <!-- Icon Keren -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Supabase JS SDK -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -335,6 +338,122 @@
             font-size: 0.9rem;
             text-align: center;
         }
+
+        /* Modal Pengumuman */
+        .pengumuman-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pengumuman-modal.active {
+            display: flex;
+        }
+
+        .pengumuman-content {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            width: 95%;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 15px;
+            border: 4px solid #991b1b;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            animation: pengumumanSlideIn 0.5s ease;
+            position: relative;
+        }
+
+        @keyframes pengumumanSlideIn {
+            from {
+                transform: translateY(-100px) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .pengumuman-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .pengumuman-icon {
+            font-size: 3rem;
+            margin-right: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .pengumuman-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .pengumuman-id {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .pengumuman-body {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pengumuman-footer {
+            text-align: right;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .pengumuman-tertanda {
+            font-style: italic;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .btn-close-pengumuman {
+            background: white;
+            color: #667eea;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-close-pengumuman:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -517,6 +636,24 @@
         </div>
     </div>
 
+    <!-- Modal Pengumuman -->
+    <div id="pengumumanModal" class="pengumuman-modal">
+        <div class="pengumuman-content">
+            <div class="pengumuman-header">
+                <i class="fas fa-bullhorn pengumuman-icon"></i>
+                <div>
+                    <h2 class="pengumuman-title">Pemberitahuan Kepala Sekolah</h2>
+                    <div class="pengumuman-id" id="pengumumanId"></div>
+                </div>
+            </div>
+            <div class="pengumuman-body" id="pengumumanPesan"></div>
+            <div class="pengumuman-footer">
+                <div class="pengumuman-tertanda" id="pengumumanTertanda"></div>
+                <button class="btn-close-pengumuman" onclick="closePengumumanModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* --- JavaScript: Logika Halaman --- */
         
@@ -524,6 +661,11 @@
         const supabaseUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- Supabase Integration for Absensi (Pengumuman) ---
+        const absensiUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const absensiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
+        const absensiClient = supabase.createClient(absensiUrl, absensiKey);
         
         async function loadSchoolIdentity() {
             try {
@@ -532,7 +674,7 @@
                     .select('nama_sekolah, logo, slogan')
                     .limit(1)
                     .single();
-                
+
                 if (data) {
                     if (data.nama_sekolah) {
                         document.querySelector('.login-left h1').textContent = data.nama_sekolah;
@@ -549,7 +691,36 @@
                 console.error("Error loading school identity:", err);
             }
         }
+
+        // --- Load Pengumuman ---
+        async function loadPengumuman() {
+            try {
+                const { data, error } = await absensiClient
+                    .from('pengumuman')
+                    .select('*')
+                    .order('id', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (data) {
+                    // Tampilkan modal pengumuman
+                    document.getElementById('pengumumanId').textContent = `ID: ${data.id}`;
+                    document.getElementById('pengumumanPesan').textContent = data.pesan;
+                    document.getElementById('pengumumanTertanda').textContent = `Tertanda, ${data.tertanda}`;
+                    document.getElementById('pengumumanModal').classList.add('active');
+                }
+            } catch (err) {
+                console.log("No pengumuman found or error:", err);
+                // Tidak perlu menampilkan error jika tidak ada pengumuman
+            }
+        }
+
+        function closePengumumanModal() {
+            document.getElementById('pengumumanModal').classList.remove('active');
+        }
+
         document.addEventListener('DOMContentLoaded', loadSchoolIdentity);
+        document.addEventListener('DOMContentLoaded', loadPengumuman);
 
         document.addEventListener('DOMContentLoaded', () => {
             const loginForm = document.getElementById('loginForm');
