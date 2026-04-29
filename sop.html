@@ -453,131 +453,8 @@
         </div>
 
         <div class="dashboard-card card-dark" id="mainAccordionContainer" style="display: none; padding: 0; overflow: hidden;">
-            
-            <div class="accordion-item" id="sopUmumItem">
-                <div class="card-header-dark accordion-header" onclick="toggleAccordion(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center;">
-                    <i class="fas fa-book" style="color: #60a5fa; margin-right: 10px;"></i>
-                    SOP Umum Sekolah
-                </h3>
-                <i class="fas fa-chevron-down accordion-icon" style="color: #9ca3af;"></i>
-            </div>
-            
-            <div class="accordion-content">
-                <div class="table-responsive">
-                    <table class="custom-table" id="sopUmumTable">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama SOP</th>
-                            <th>Kategori</th>
-                            <th>Tanggal Pembuatan</th>
-                            <th style="text-align: center;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="5" style="text-align: center;">Memuat data SOP umum...</td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-            <div class="accordion-item" id="sopGuruItem">
-                <div class="card-header-dark accordion-header" onclick="toggleAccordion(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center;">
-                    <i class="fas fa-chalkboard-teacher" style="color: #10b981; margin-right: 10px;"></i>
-                    SOP Guru
-                </h3>
-                <i class="fas fa-chevron-down accordion-icon" style="color: #9ca3af;"></i>
-            </div>
-            
-            <div class="accordion-content">
-                <div class="table-responsive">
-                    <table class="custom-table" id="sopGuruTable">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama SOP</th>
-                            <th>Kategori</th>
-                            <th>Tanggal Pembuatan</th>
-                            <th style="text-align: center;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="5" style="text-align: center;">Memuat data SOP guru...</td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-            <div class="accordion-item" id="sopSiswaItem">
-                <div class="card-header-dark accordion-header" onclick="toggleAccordion(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center;">
-                    <i class="fas fa-user-graduate" style="color: #f59e0b; margin-right: 10px;"></i>
-                    SOP Siswa
-                </h3>
-                <i class="fas fa-chevron-down accordion-icon" style="color: #9ca3af;"></i>
-            </div>
-            
-            <div class="accordion-content">
-                <div class="table-responsive">
-                    <table class="custom-table" id="sopSiswaTable">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama SOP</th>
-                            <th>Kategori</th>
-                            <th>Tanggal Pembuatan</th>
-                            <th style="text-align: center;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="5" style="text-align: center;">Memuat data SOP siswa...</td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-            <div class="accordion-item" id="sopKesiswaanItem">
-                <div class="card-header-dark accordion-header" onclick="toggleAccordion(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center;">
-                    <i class="fas fa-users-cog" style="color: #8b5cf6; margin-right: 10px;"></i>
-                    SOP Kesiswaan
-                </h3>
-                <i class="fas fa-chevron-down accordion-icon" style="color: #9ca3af;"></i>
-            </div>
-            
-            <div class="accordion-content">
-                <div class="table-responsive">
-                    <table class="custom-table" id="sopKesiswaanTable">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama SOP</th>
-                            <th>Kategori</th>
-                            <th>Tanggal Pembuatan</th>
-                            <th style="text-align: center;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="5" style="text-align: center;">Memuat data SOP kesiswaan...</td>
-                        </tr>
-                    </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
+            <!-- Tab items akan dibuat secara dinamis dari database -->
+            <div id="dynamicTabsContainer"></div>
         </div>
 
         <!-- Kaki Halaman -->
@@ -589,8 +466,8 @@
 
     <script>
         // --- Koneksi Supabase ---
-        const supabaseUrl = 'https://guozvxnlpyfvbqsxbrxp.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1b3p2eG5scHlmdmJxc3hicnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzU2NzYsImV4cCI6MjA4ODExMTY3Nn0.nyLDvM_R-YPbqgz5_K5LlX2zb3ySjyM6lK5s1zZXZ2k';
+        const supabaseUrl = 'https://fccnnndmordppyajhrbw.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjY25ubmRtb3JkcHB5YWpocmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MzQ0OTQsImV4cCI6MjA4ODExMDQ5NH0.rdCVYD0ECnL9G-TXCl4u66gyI_o9STl2gEjvSOuL4R0';
         
         let supabaseClient;
 
@@ -643,6 +520,126 @@
                 }
             }
 
+            // Load SOP data dan buat tab dinamis
+            async function loadSopDataAndCreateTabs() {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('sop')
+                        .select('*')
+                        .order('nama_sop', { ascending: true });
+
+                    if (error) throw error;
+
+                    const dynamicTabsContainer = document.getElementById('dynamicTabsContainer');
+                    dynamicTabsContainer.innerHTML = '';
+
+                    if (data.length === 0) {
+                        dynamicTabsContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #9ca3af;">Belum ada data SOP.</div>';
+                        return;
+                    }
+
+                    // Buat tab untuk setiap data row
+                    data.forEach((sop, index) => {
+                        const tabId = `sopTab_${index}`;
+                        
+                        // Tentukan icon berdasarkan nama SOP
+                        let iconClass = 'fas fa-book';
+                        let iconColor = '#60a5fa';
+                        
+                        if (sop.nama_sop.toLowerCase().includes('guru')) {
+                            iconClass = 'fas fa-chalkboard-teacher';
+                            iconColor = '#10b981';
+                        } else if (sop.nama_sop.toLowerCase().includes('siswa')) {
+                            iconClass = 'fas fa-user-graduate';
+                            iconColor = '#f59e0b';
+                        } else if (sop.nama_sop.toLowerCase().includes('kesiswaan')) {
+                            iconClass = 'fas fa-users-cog';
+                            iconColor = '#8b5cf6';
+                        }
+                        
+                        const accordionItem = document.createElement('div');
+                        accordionItem.className = 'accordion-item';
+                        accordionItem.id = `${tabId}Item`;
+                        
+                        accordionItem.innerHTML = `
+                            <div class="card-header-dark accordion-header" onclick="toggleAccordion(this)" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                                <h3 style="margin: 0; font-size: 1.2rem; display: flex; align-items: center;">
+                                    <i class="${iconClass}" style="color: ${iconColor}; margin-right: 10px;"></i>
+                                    ${sop.nama_sop}
+                                </h3>
+                                <i class="fas fa-chevron-down accordion-icon" style="color: #9ca3af;"></i>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="table-responsive">
+                                    <table class="custom-table" id="${tabId}Table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nama SOP</th>
+                                                <th>Tanggal Pembuatan</th>
+                                                <th style="text-align: center;">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>${sop.nama_sop}</td>
+                                                <td>${sop.tanggal_pembuatan || '-'}</td>
+                                                <td style="text-align: center;">
+                                                    ${sop.file_sop ? `<a href="${sop.file_sop}" target="_blank" style="color: #10b981; text-decoration: none; margin-right: 10px;" title="Download SOP"><i class="fas fa-download"></i></a>` : ''}
+                                                    <button onclick="deleteSop('${sop.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; margin-left:10px;" title="Hapus SOP"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                ${sop.file_sop ? `
+                                <div id="${tabId}PdfContainer" style="margin-top: 20px;">
+                                    <h4 style="color: #f3f4f6; margin-bottom: 15px; font-size: 1.1rem;">
+                                        <i class="fas fa-file-pdf" style="color: #ef4444; margin-right: 8px;"></i>
+                                        Preview SOP
+                                    </h4>
+                                    <div style="background: #374151; border-radius: 8px; padding: 20px; border: 1px solid #4b5563;">
+                                        <iframe id="${tabId}PdfFrame" 
+                                                src="${sop.file_sop}" 
+                                                style="width: 100%; height: 600px; border: none; border-radius: 4px; background: white;"
+                                                frameborder="0">
+                                        </iframe>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        
+                        dynamicTabsContainer.appendChild(accordionItem);
+                    });
+
+                } catch (error) {
+                    console.error('Error loading SOP data:', error);
+                    document.getElementById('dynamicTabsContainer').innerHTML = 
+                        '<div style="text-align: center; padding: 40px; color: #ef4444;">Gagal memuat data: ' + error.message + '</div>';
+                }
+            }
+
+            // Delete SOP function
+            window.deleteSop = async function(id) {
+                if(confirm('Apakah Anda yakin ingin menghapus SOP ini?')) {
+                    try {
+                        const { error } = await supabaseClient
+                            .from('sop')
+                            .delete()
+                            .eq('id', String(id));
+                        
+                        if (error) throw error;
+                        alert('SOP berhasil dihapus');
+                        loadSopDataAndCreateTabs(); // Reload data
+                    } catch (error) {
+                        console.error('Error deleting:', error);
+                        alert('Gagal menghapus SOP: ' + error.message);
+                    }
+                }
+            }
+
             // Initialize
             document.addEventListener('DOMContentLoaded', function() {
                 loadSchoolIdentity();
@@ -650,13 +647,18 @@
                 // Show main accordion container
                 document.getElementById('mainAccordionContainer').style.display = 'block';
                 
+                // Load SOP data dan buat tab dinamis
+                loadSopDataAndCreateTabs();
+                
                 // Open first accordion by default
-                const firstAccordion = document.querySelector('.accordion-item');
-                if (firstAccordion) {
-                    firstAccordion.classList.add('active');
-                    const content = firstAccordion.querySelector('.accordion-content');
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
+                setTimeout(() => {
+                    const firstAccordion = document.querySelector('.accordion-item');
+                    if (firstAccordion) {
+                        firstAccordion.classList.add('active');
+                        const content = firstAccordion.querySelector('.accordion-content');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                }, 100);
                 
                 // Set current date
                 function updateDateTime() {
