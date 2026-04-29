@@ -304,6 +304,35 @@
             animation: slideDown 0.3s ease;
         }
 
+        /* Modal Notifikasi Style */
+        #notificationModal .modal-content {
+            background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+            border: 2px solid #f59e0b;
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.3);
+        }
+
+        #notificationModal .modal-content h3 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        #notificationModal .modal-content p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        #notificationModal .modal-content .btn-primary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        #notificationModal .modal-content .btn-primary:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
         @keyframes slideDown {
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -562,6 +591,18 @@
         </div>
     </div>
 
+    <!-- Modal Notifikasi -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+            </div>
+            <h3 style="margin-bottom: 15px; color: #1f2937;">Peringatan</h3>
+            <p id="notificationMessage" style="color: #64748b; margin-bottom: 25px; line-height: 1.6;"></p>
+            <button id="closeNotificationBtn" class="btn btn-primary" style="width: 100%; justify-content: center;">OK</button>
+        </div>
+    </div>
+
     <script>
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -656,9 +697,8 @@
                         <td>${sop.id}</td>
                         <td>${sop.nama_sop}</td>
                         <td>
-                            <button onclick="openEditModal(${sop.id}, '${sop.nama_sop.replace(/'/g, "\\'")}')" style="background:none; border:none; color:#60a5fa; cursor:pointer;" title="Edit SOP"><i class="fas fa-edit"></i></button>
-                            ${sop.file_sop ? `<button onclick="downloadSop('${sop.file_sop}')" style="background:none; border:none; color:#10b981; cursor:pointer; margin-left:10px;" title="Download SOP"><i class="fas fa-download"></i></button>` : ''}
-                            <button onclick="deleteSop(${sop.id})" style="background:none; border:none; color:#f87171; cursor:pointer; margin-left:10px;" title="Hapus SOP"><i class="fas fa-trash"></i></button>
+                            ${sop.file_sop ? `<button onclick="downloadSop('${sop.file_sop}')" style="background:none; border:none; color:#10b981; cursor:pointer;" title="Download SOP"><i class="fas fa-download"></i></button>` : ''}
+                            <button onclick="deleteSop('${sop.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; margin-left:10px;" title="Hapus SOP"><i class="fas fa-trash"></i></button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -699,46 +739,49 @@
         const modalTitle = document.querySelector('.modal-header h3');
         const saveBtn = document.getElementById('saveSopBtn');
         const sopIdInput = document.getElementById('sopId');
+        
+        // Modal Notifikasi
+        const notificationModal = document.getElementById('notificationModal');
+        const closeNotificationBtn = document.getElementById('closeNotificationBtn');
+        const notificationMessage = document.getElementById('notificationMessage');
+        
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message) {
+            notificationMessage.textContent = message;
+            notificationModal.classList.add('active');
+        }
+        
+        // Event listener untuk menutup modal notifikasi
+        closeNotificationBtn.addEventListener('click', () => {
+            notificationModal.classList.remove('active');
+        });
+        
+        // Tutup modal notifikasi jika klik di luar
+        notificationModal.addEventListener('click', (e) => {
+            if (e.target === notificationModal) {
+                notificationModal.classList.remove('active');
+            }
+        });
 
-        addBtn.addEventListener('click', async () => {
+        addBtn.addEventListener('click', () => {
             modalTitle.textContent = 'Tambah SOP Baru';
             saveBtn.textContent = 'Tambah SOP';
             sopIdInput.value = '';
             document.getElementById('fileSop').required = true;
             addSopForm.reset();
             
-            // Generate Id SOP secara async
-            const generatedId = await generateSopId();
+            // Generate Id SOP dengan format SOP- + 6 digit random
+            const generatedId = generateSopId();
             document.getElementById('idSop').value = generatedId;
             
             modal.classList.add('active');
         });
 
-        async function generateSopId() {
-            try {
-                // Cari Id SOP terakhir dari database
-                const { data, error } = await supabaseClient
-                    .from('sop')
-                    .select('id')
-                    .order('id', { ascending: false })
-                    .limit(1);
-                
-                if (error) throw error;
-                
-                let nextId = 1;
-                if (data && data.length > 0) {
-                    nextId = parseInt(data[0].id) + 1;
-                }
-                
-                // Format dengan 3 digit (SOP001, SOP002, dst)
-                return `SOP${String(nextId).padStart(3, '0')}`;
-            } catch (error) {
-                console.error('Error generating SOP ID:', error);
-                // Fallback ke format timestamp jika error
-                const date = new Date();
-                const timestamp = date.getTime();
-                return `SOP${timestamp}`;
-            }
+        function generateSopId() {
+            // Generate 6 digit random number
+            const randomNum = Math.floor(Math.random() * 1000000);
+            // Format dengan 6 digit (SOP-123456)
+            return `SOP-${String(randomNum).padStart(6, '0')}`;
         }
 
         window.openEditModal = function(id, nama) {
@@ -784,6 +827,16 @@
                 // Handle file upload hanya untuk data baru atau jika file diubah
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
+                    
+                    // Validasi ukuran file (max 2MB)
+                    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+                    if (file.size > maxSize) {
+                        showNotification('Ukuran file yang anda upload terlalu besar, silahkan lakukan kompresi file ke ukuran yang tidak lebih dari 2mb');
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                    
                     const fileName = `${idSop}_${file.name}`;
                     
                     // Upload ke Supabase Storage bucket 'aset'
