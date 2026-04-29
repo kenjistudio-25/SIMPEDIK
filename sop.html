@@ -586,8 +586,7 @@
                                                 <td>${sop.nama_sop}</td>
                                                 <td>${sop.tanggal_pembuatan || '-'}</td>
                                                 <td style="text-align: center;">
-                                                    ${sop.file_sop ? `<a href="${sop.file_sop}" target="_blank" style="color: #10b981; text-decoration: none; margin-right: 10px;" title="Download SOP"><i class="fas fa-download"></i></a>` : ''}
-                                                    <button onclick="deleteSop('${sop.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; margin-left:10px;" title="Hapus SOP"><i class="fas fa-trash"></i></button>
+                                                    ${sop.file_sop ? `<a href="${sop.file_sop}" target="_blank" style="color: #10b981; text-decoration: none;" title="Download SOP"><i class="fas fa-download"></i></a>` : ''}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -618,25 +617,6 @@
                     console.error('Error loading SOP data:', error);
                     document.getElementById('dynamicTabsContainer').innerHTML = 
                         '<div style="text-align: center; padding: 40px; color: #ef4444;">Gagal memuat data: ' + error.message + '</div>';
-                }
-            }
-
-            // Delete SOP function
-            window.deleteSop = async function(id) {
-                if(confirm('Apakah Anda yakin ingin menghapus SOP ini?')) {
-                    try {
-                        const { error } = await supabaseClient
-                            .from('sop')
-                            .delete()
-                            .eq('id', String(id));
-                        
-                        if (error) throw error;
-                        alert('SOP berhasil dihapus');
-                        loadSopDataAndCreateTabs(); // Reload data
-                    } catch (error) {
-                        console.error('Error deleting:', error);
-                        alert('Gagal menghapus SOP: ' + error.message);
-                    }
                 }
             }
 
