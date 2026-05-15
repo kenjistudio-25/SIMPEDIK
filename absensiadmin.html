@@ -667,7 +667,10 @@
                 <h3><i class="fas fa-chart-bar" style="color: var(--primary-color); margin-right: 10px;"></i> Ringkasan Kehadiran per Kelas</h3>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label for="filterBulanSummary" style="color: #cbd5e1; font-size: 0.9rem; font-weight: normal;">Periode:</label>
-                    <input type="text" id="filterBulanSummary" class="form-control" placeholder="Pilih Bulan">
+                    <input type="text" id="filterBulanSummary" class="form-control" placeholder="Pilih Periode">
+                    <button id="btnShowAllSummary" class="btn btn-primary" style="background-color: #10b981; padding: 8px 12px; font-size: 0.85rem; white-space: nowrap;">
+                        <i class="fas fa-list"></i> Tampilkan Semua
+                    </button>
                 </div>
             </div>
             <div class="table-responsive">
@@ -836,7 +839,7 @@
                     // 2. Ambil data absensi dari tabel absensiswa (ABSENSI) berdasarkan tanggal
                     let query = attendanceClient
                         .from('absensiswa')
-                        .select('*');
+                        .select('*', { count: 'exact' });
 
                     if (filterDate) {
                         query = query.eq('tanggal', filterDate);
@@ -844,11 +847,43 @@
                         query = query.order('tanggal', { ascending: false });
                     }
                     
-                    const { data: attendanceData, error: attError } = await query;
+                    // Tambahkan limit untuk mengambil semua data (Supabase default limit 1000)
+                    query = query.limit(10000);
+                    
+                    const { data: attendanceData, error: attError, count } = await query;
 
                     if (attError) throw attError;
                     
-                    globalAttendanceData = attendanceData || [];
+                    // Jika count > 1000, gunakan pagination untuk mengambil semua data
+                    if (count && count > 1000) {
+                        globalAttendanceData = [];
+                        let batchSize = 1000;
+                        let fetchedCount = 0;
+                        
+                        while (fetchedCount < count) {
+                            const from = fetchedCount;
+                            const to = Math.min(fetchedCount + batchSize - 1, count - 1);
+                            
+                            let paginatedQuery = attendanceClient
+                                .from('absensiswa')
+                                .select('*');
+                            
+                            if (filterDate) {
+                                paginatedQuery = paginatedQuery.eq('tanggal', filterDate);
+                            } else {
+                                paginatedQuery = paginatedQuery.order('tanggal', { ascending: false });
+                            }
+                            
+                            const { data: batchData, error: batchError } = await paginatedQuery.range(from, to);
+                            
+                            if (batchError) throw batchError;
+                            
+                            globalAttendanceData = globalAttendanceData.concat(batchData || []);
+                            fetchedCount += batchSize;
+                        }
+                    } else {
+                        globalAttendanceData = attendanceData || [];
+                    }
 
                     let totalHadir = 0, totalSakit = 0, totalIzin = 0, totalAlpha = 0;
 
@@ -1003,9 +1038,7 @@
                 const summaryBody = document.getElementById('summaryTableBody');
                 const monthVal = document.getElementById('filterBulanSummary').value;
                 
-                if (!monthVal) return;
-
-                summaryBody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat Data Bulanan...</td></tr>';
+                summaryBody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat Data...</td></tr>';
 
                 try {
                     const { data: rombelData, error: rombelError } = await supabaseClient
@@ -1015,16 +1048,34 @@
                     
                     if (rombelError) throw rombelError;
 
-                    const [year, month] = monthVal.split('-');
-                    const startDate = `${monthVal}-01`;
-                    const lastDay = new Date(year, month, 0).getDate();
-                    const endDate = `${monthVal}-${lastDay}`;
+                    let attendanceData;
+                    let attError;
 
-                    const { data: attendanceData, error: attError } = await attendanceClient
-                        .from('absensiswa')
-                        .select('kelas, status_kehadiran')
-                        .gte('tanggal', startDate)
-                        .lte('tanggal', endDate);
+                    if (monthVal) {
+                        // Filter berdasarkan bulan yang dipilih
+                        const [year, month] = monthVal.split('-');
+                        const startDate = `${monthVal}-01`;
+                        const lastDay = new Date(year, month, 0).getDate();
+                        const endDate = `${monthVal}-${lastDay}`;
+
+                        const result = await attendanceClient
+                            .from('absensiswa')
+                            .select('kelas, status_kehadiran')
+                            .gte('tanggal', startDate)
+                            .lte('tanggal', endDate);
+                        
+                        attendanceData = result.data;
+                        attError = result.error;
+                    } else {
+                        // Tampilkan semua data tanpa filter bulan
+                        const result = await attendanceClient
+                            .from('absensiswa')
+                            .select('kelas, status_kehadiran')
+                            .limit(10000); // Limit lebih tinggi untuk mengambil semua data
+                        
+                        attendanceData = result.data;
+                        attError = result.error;
+                    }
 
                     if (attError) throw attError;
 
@@ -1097,7 +1148,8 @@
                         .from('absensiswa')
                         .select('tanggal, status_kehadiran')
                         .gte('tanggal', startDate)
-                        .lte('tanggal', endDate);
+                        .lte('tanggal', endDate)
+                        .limit(10000); // Limit untuk mengambil semua data semester
 
                     if (error) throw error;
 
@@ -1197,7 +1249,8 @@
                         .select('nama_siswa, kelas, status_kehadiran')
                         .gte('tanggal', startDate)
                         .lte('tanggal', endDate)
-                        .in('status_kehadiran', ['Alpa', 'Alpha']);
+                        .in('status_kehadiran', ['Alpa', 'Alpha'])
+                        .limit(10000); // Limit untuk mengambil semua data Alpa semester
 
                     if (error) throw error;
 
@@ -1438,12 +1491,20 @@
                     ],
                     altInput: true, 
                     altInputClass: "form-control flatpickr-input",
-                    defaultDate: new Date(),
                     locale: "id",
                     disableMobile: true, 
                     onChange: function(selectedDates, dateStr, instance) {
                         loadClassSummary(); 
                     }
+                });
+
+                // Event listener untuk tombol Tampilkan Semua
+                document.getElementById('btnShowAllSummary').addEventListener('click', function() {
+                    const fpInstance = document.getElementById('filterBulanSummary')._flatpickr;
+                    if (fpInstance) {
+                        fpInstance.clear();
+                    }
+                    loadClassSummary();
                 });
 
                 loadDashboardData();
