@@ -1022,12 +1022,40 @@
                 
                 if (studentError) throw studentError;
 
-                const { data: attendance, error: attendanceError } = await absensiClient
+                // Gunakan pagination untuk mengambil semua data absensi
+                let query = absensiClient
                     .from('absensiswa')
-                    .select('nama_siswa, status_kehadiran')
+                    .select('nama_siswa, status_kehadiran', { count: 'exact' })
                     .eq('kelas', kelas);
 
+                const { data: attendance, error: attendanceError, count } = await query.limit(10000);
+
                 if (attendanceError) throw attendanceError;
+                
+                // Jika count > 1000, gunakan pagination untuk mengambil semua data
+                let allAttendance = attendance || [];
+                if (count && count > 1000) {
+                    allAttendance = [];
+                    let batchSize = 1000;
+                    let fetchedCount = 0;
+                    
+                    while (fetchedCount < count) {
+                        const from = fetchedCount;
+                        const to = Math.min(fetchedCount + batchSize - 1, count - 1);
+                        
+                        let paginatedQuery = absensiClient
+                            .from('absensiswa')
+                            .select('nama_siswa, status_kehadiran')
+                            .eq('kelas', kelas);
+                        
+                        const { data: batchData, error: batchError } = await paginatedQuery.range(from, to);
+                        
+                        if (batchError) throw batchError;
+                        
+                        allAttendance = allAttendance.concat(batchData || []);
+                        fetchedCount += batchSize;
+                    }
+                }
 
                 const stats = {};
                 let totalHadir = 0, totalSakit = 0, totalIjin = 0, totalAlpa = 0;
@@ -1038,8 +1066,8 @@
                     });
                 }
 
-                if (attendance) {
-                    attendance.forEach(record => {
+                if (allAttendance) {
+                    allAttendance.forEach(record => {
                         const name = record.nama_siswa;
                         let status = record.status_kehadiran;
                         
